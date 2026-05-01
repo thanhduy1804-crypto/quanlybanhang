@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS Mini K80</title>
+    <script src="https://tailwindcss.com"></script>
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #bill-print, #bill-print * { visibility: visible; }
+            #bill-print { position: absolute; left: 0; top: 0; width: 80mm; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-2">
+    <div class="max-w-md mx-auto bg-white shadow-lg rounded-lg p-4">
+        <h1 class="text-xl font-bold text-center mb-4">HỆ THỐNG BÁN HÀNG</h1>
+        
+        <!-- Chọn Khách -->
+        <select id="cSelect" class="w-full border p-2 mb-2 rounded" onchange="renderProducts()"></select>
+        
+        <!-- Danh sách SP -->
+        <div id="productList" class="space-y-2 h-64 overflow-y-auto mb-4 border-b pb-2"></div>
+
+        <!-- Giỏ hàng -->
+        <div class="font-bold text-lg mb-2">Giỏ hàng:</div>
+        <div id="cartItems" class="text-sm mb-4"></div>
+        <div class="text-right font-bold text-xl text-red-600">Tổng: <span id="totalVal">0</span>đ</div>
+
+        <button onclick="saveAndPrint()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold mt-4">
+            LƯU & IN HÓA ĐƠN (K80)
+        </button>
+    </div>
+
+    <!-- Khu vực in Bill ẩn -->
+    <div id="bill-print" class="hidden text-xs font-mono">
+        <center>
+            <h2 style="font-size: 16px;">HOÁ ĐƠN BÁN HÀNG</h2>
+            <p>--------------------------------</p>
+        </center>
+        <div id="bill-content"></div>
+        <p>--------------------------------</p>
+        <div id="bill-total" class="text-right font-bold"></div>
+        <center><p>Cảm ơn quý khách!</p></center>
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycby-waqjA_gHFkfB3imPahQf_LchiEm-woTIgGMZ60GHB2e7FCJ_4Ah2dsPccyW4_owBCw/exec";
+        let db = { products: [], customers: [] };
+        let cart = [];
+
+        async function init() {
+            const res = await fetch(API_URL);
+            db = await res.json();
+            const cSel = document.getElementById('cSelect');
+            db.customers.forEach(c => cSel.innerHTML += `<option value="${c[1]}">${c[0]} (${c[1]})</option>`);
+            renderProducts();
+        }
+
+        function renderProducts() {
+            const list = document.getElementById('productList');
+            list.innerHTML = "";
+            db.products.forEach(p => {
+                list.innerHTML += `
+                    <div class="flex items-center gap-2 p-2 border rounded" onclick="addToCart('${p.id}')">
+                        <img src="${p.img}" class="w-12 h-12 object-cover">
+                        <div class="flex-1">
+                            <div class="font-bold">${p.name}</div>
+                            <div class="text-xs text-gray-500">${p.cat} | ${p.unit}</div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function addToCart(id) {
+            const p = db.products.find(x => x.id === id);
+            const group = document.getElementById('cSelect').value;
+            const price = (group === "Khách Sỉ") ? p.si : p.le;
+            cart.push({...p, selectedPrice: price});
+            updateUI();
+        }
+
+        function updateUI() {
+            const container = document.getElementById('cartItems');
+            let total = 0;
+            container.innerHTML = cart.map(i => {
+                total += i.selectedPrice;
+                return `<div>${i.name} - ${i.selectedPrice.toLocaleString()}đ</div>`;
+            }).join('');
+            document.getElementById('totalVal').innerText = total.toLocaleString();
+        }
+
+        async function saveAndPrint() {
+            if(cart.length === 0) return alert("Giỏ hàng trống");
+            
+            const order = {
+                customerName: document.getElementById('cSelect').options[document.getElementById('cSelect').selectedIndex].text,
+                total: cart.reduce((a, b) => a + b.selectedPrice, 0),
+                items: cart
+            };
+
+            // In bill
+            document.getElementById('bill-content').innerHTML = cart.map(i => `<div>${i.name} x1: ${i.selectedPrice.toLocaleString()}</div>`).join('');
+            document.getElementById('bill-total').innerText = "TỔNG: " + order.total.toLocaleString() + "đ";
+            window.print();
+
+            // Lưu vào Sheet
+            await fetch(API_URL, { method: "POST", body: JSON.stringify(order) });
+            alert("Đã lưu đơn hàng!");
+            cart = []; updateUI();
+        }
+
+        init();
+    </script>
+</body>
+</html>
