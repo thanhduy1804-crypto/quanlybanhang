@@ -3,112 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Giỏ Hàng Thông Minh</title>
+    <title>Hệ Thống Bán Hàng Chia Ngăn</title>
     <script src="https://tailwindcss.com"></script>
     <link href="https://cloudflare.com" rel="stylesheet">
+    <style>
+        /* Tối ưu cuộn danh sách */
+        .scroll-custom::-webkit-scrollbar { width: 4px; }
+        .scroll-custom::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-slate-100 h-screen overflow-hidden flex flex-col">
 
-    <!-- HEADER -->
-    <div class="bg-blue-700 text-white p-4 sticky top-0 z-50 shadow-md">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <h1 class="font-bold text-lg">POS Mini App</h1>
-            <div class="relative">
-                <i class="fa-solid fa-cart-shopping text-2xl"></i>
-                <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">0</span>
-            </div>
-        </div>
-    </div>
+    <!-- Thanh tiêu đề trên cùng -->
+    <header class="bg-blue-800 text-white p-3 shadow-md flex justify-between items-center px-6">
+        <h1 class="font-bold uppercase tracking-widest text-sm"><i class="fa-solid fa-store mr-2"></i> Hệ Thống Lên Đơn Nhanh</h1>
+        <div id="clock" class="text-xs opacity-80"></div>
+    </header>
 
-    <div class="max-w-4xl mx-auto p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Main Content: Chia đôi màn hình -->
+    <main class="flex flex-1 overflow-hidden">
         
-        <!-- BÊN TRÁI: CHỌN KHÁCH & SẢN PHẨM -->
-        <div class="md:col-span-2 space-y-6">
-            <!-- Chọn Khách Hàng -->
-            <div class="bg-white p-4 rounded-xl shadow-sm">
-                <label class="block text-sm font-bold text-gray-700 mb-2">1. Thông tin khách hàng</label>
-                <select id="select-khach" onchange="changeCustomer()" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+        <!-- PHẦN BÊN TRÁI: DANH SÁCH SẢN PHẨM (60% width) -->
+        <section class="w-3/5 p-4 flex flex-col border-r border-slate-300 bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-bold text-slate-700 uppercase text-xs">📦 Danh mục sản phẩm</h2>
+                <input type="text" placeholder="Tìm tên sản phẩm..." class="text-xs border border-slate-300 rounded-full px-4 py-2 w-1/2 focus:outline-blue-500">
+            </div>
+            
+            <!-- Grid Sản phẩm -->
+            <div id="product-grid" class="grid grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto scroll-custom pr-2">
+                <!-- Sản phẩm mẫu -->
+                <p class="text-slate-400 italic text-xs">Đang kết nối dữ liệu Google Sheet...</p>
+            </div>
+        </section>
+
+        <!-- PHẦN BÊN PHẢI: THÔNG TIN KHÁCH & GIỎ HÀNG (40% width) -->
+        <section class="w-2/5 bg-slate-50 flex flex-col shadow-inner">
+            
+            <!-- 1. Thông tin Khách hàng -->
+            <div class="p-4 bg-white border-b border-slate-200">
+                <label class="block text-[10px] font-black text-slate-500 uppercase mb-2">👤 Thông tin khách hàng</label>
+                <select id="select-khach" onchange="changeCustomer()" class="w-full p-2.5 bg-slate-100 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 outline-none">
                     <option value="">-- Chọn khách hàng --</option>
                 </select>
-                <div id="badge-nhom" class="mt-2 hidden">
-                    <span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-1 rounded-md font-bold uppercase">Nhóm: <span id="label-nhom">--</span></span>
+                <div id="nhom-badge" class="mt-2 hidden">
+                    <span class="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded font-bold uppercase tracking-tighter">Nhóm: <span id="label-nhom">--</span></span>
                 </div>
             </div>
 
-            <!-- Danh sách sản phẩm -->
-            <div class="bg-white p-4 rounded-xl shadow-sm">
-                <label class="block text-sm font-bold text-gray-700 mb-4">2. Danh sách sản phẩm</label>
-                <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Sản phẩm sẽ render ở đây -->
-                    <p class="text-gray-400 text-sm italic">Đang tải dữ liệu...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- BÊN PHẢI: GIỎ HÀNG -->
-        <div class="md:col-span-1">
-            <div class="bg-white rounded-xl shadow-lg sticky top-20 overflow-hidden">
-                <div class="bg-gray-800 text-white p-3 text-center font-bold">GIỎ HÀNG</div>
-                
-                <div id="cart-items" class="p-3 max-h-[400px] overflow-y-auto space-y-3">
-                    <p class="text-center text-gray-400 py-10 text-sm">Chưa có sản phẩm nào</p>
-                </div>
-
-                <div class="p-4 border-t border-gray-100 bg-gray-50">
-                    <div class="flex justify-between mb-2">
-                        <span class="text-gray-500">Tổng cộng:</span>
-                        <span id="total-price" class="font-bold text-red-600 text-xl">0đ</span>
+            <!-- 2. Danh sách giỏ hàng -->
+            <div class="flex-1 p-4 overflow-y-auto scroll-custom">
+                <label class="block text-[10px] font-black text-slate-500 uppercase mb-3">🛒 Chi tiết giỏ hàng</label>
+                <div id="cart-list" class="space-y-2">
+                    <!-- Các món hàng đã chọn sẽ hiện ở đây -->
+                    <div class="text-center py-10 opacity-30">
+                        <i class="fa-solid fa-cart-flatbed text-4xl mb-2"></i>
+                        <p class="text-xs">Chưa có sản phẩm</p>
                     </div>
-                    <button onclick="checkout()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition active:scale-95">
-                        XÁC NHẬN ĐƠN HÀNG
-                    </button>
                 </div>
             </div>
-        </div>
 
-    </div>
+            <!-- 3. Tổng cộng & Xác nhận -->
+            <div class="p-4 bg-white border-t border-slate-300 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-slate-500 font-bold text-sm">TỔNG CỘNG:</span>
+                    <span id="total-price" class="text-2xl font-black text-red-600">0đ</span>
+                </div>
+                <button onclick="checkout()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-4 rounded-xl shadow-lg transition-all active:scale-95 flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-check-double"></i> XÁC NHẬN ĐƠN HÀNG
+                </button>
+            </div>
+
+        </section>
+    </main>
 
     <script>
+        // CẤU HÌNH API
         const API_URL = "https://script.google.com/macros/s/AKfycbw_MdZkKZBg4zI4mUumdHrMYc7xG8izdHvxsZ0uGdK4FoiKxVLeEn4mtp8SRoGaVVkNPQ/exec";
-        
-        let products = [];
-        let customers = [];
-        let cart = [];
-        let currentGroup = "Lẻ"; // Mặc định là lẻ
 
+        let db_products = [];
+        let db_customers = [];
+        let cart = [];
+        let currentGroup = "Lẻ";
+
+        // Đồng hồ
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleString('vi-VN');
+        }, 1000);
+
+        // Khởi tạo app
         window.onload = async () => {
             try {
                 const res = await fetch(API_URL);
                 const data = await res.json();
-                products = data.san_pham;
-                customers = data.khach_hang;
-                renderApp();
-            } catch (e) { alert("Lỗi tải dữ liệu!"); }
+                db_products = data.san_pham;
+                db_customers = data.khach_hang;
+                renderData();
+            } catch (e) {
+                console.error(e);
+                alert("Lỗi: Không thể lấy dữ liệu từ Google Sheet!");
+            }
         };
 
-        function renderApp() {
+        function renderData() {
             // Render Khách hàng
             const sKhach = document.getElementById('select-khach');
-            customers.forEach(k => {
+            db_customers.forEach(row => {
                 let opt = document.createElement('option');
-                opt.value = k[2]; // Giả định cột 2 là Nhóm (Sỉ/Lẻ)
-                opt.text = k[1];  // Giả định cột 1 là Tên KH
+                opt.value = row[2]; // Cột Nhóm (Sỉ/Lẻ)
+                opt.text = row[1];  // Cột Tên KH
                 sKhach.appendChild(opt);
             });
 
-            // Render Sản phẩm
-            const pList = document.getElementById('product-list');
-            pList.innerHTML = '';
-            products.forEach((p, index) => {
-                pList.innerHTML += `
-                    <div class="border border-gray-100 p-3 rounded-lg hover:border-blue-300 transition shadow-sm">
-                        <div class="font-bold text-gray-800">${p[2]}</div>
-                        <div class="text-[10px] text-gray-400 mb-2">Mã: ${p[0]}</div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-blue-600 font-bold">${parseInt(p[7]).toLocaleString()}đ</span>
-                            <button onclick="addToCart(${index})" class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-blue-700 shadow-lg">
-                                <i class="fa-solid fa-plus text-xs"></i>
-                            </button>
+            // Render Sản phẩm bên trái
+            const pGrid = document.getElementById('product-grid');
+            pGrid.innerHTML = '';
+            db_products.forEach((p, index) => {
+                pGrid.innerHTML += `
+                    <div class="bg-white border border-slate-200 p-3 rounded-xl hover:shadow-md transition cursor-pointer group relative" onclick="addToCart(${index})">
+                        <div class="w-full h-20 bg-slate-100 rounded-lg mb-2 flex items-center justify-center text-slate-300">
+                            <i class="fa-solid fa-box text-2xl"></i>
+                        </div>
+                        <h3 class="text-xs font-bold text-slate-800 truncate">${p[2]}</h3>
+                        <p class="text-[10px] text-slate-400 mb-1">${p[3] || 'Đơn vị'}</p>
+                        <div class="text-blue-700 font-black text-sm">${parseInt(p[7] || 0).toLocaleString()}đ</div>
+                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
+                            <span class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg"><i class="fa-solid fa-plus"></i></span>
                         </div>
                     </div>
                 `;
@@ -118,73 +138,74 @@
         function changeCustomer() {
             const select = document.getElementById('select-khach');
             currentGroup = select.value || "Lẻ";
-            
-            document.getElementById('badge-nhom').classList.toggle('hidden', !select.value);
+            document.getElementById('nhom-badge').classList.toggle('hidden', !select.value);
             document.getElementById('label-nhom').innerText = currentGroup;
-            
-            updateCartUI(); // Cập nhật lại giá trong giỏ hàng khi đổi nhóm khách
+            updateCartUI();
         }
 
         function addToCart(index) {
-            const p = products[index];
+            const p = db_products[index];
             const found = cart.find(item => item.id === p[0]);
             
             if (found) {
                 found.qty++;
             } else {
-                cart.push({ id: p[0], name: p[2], giaSi: p[6], giaLe: p[7], qty: 1 });
+                cart.push({
+                    id: p[0],
+                    name: p[2],
+                    giaSi: p[6],
+                    giaLe: p[7],
+                    qty: 1
+                });
             }
             updateCartUI();
         }
 
         function updateCartUI() {
-            const cartContainer = document.getElementById('cart-items');
-            const cartCount = document.getElementById('cart-count');
-            const totalPrice = document.getElementById('total-price');
+            const container = document.getElementById('cart-list');
+            const totalHienThi = document.getElementById('total-price');
             
             if (cart.length === 0) {
-                cartContainer.innerHTML = '<p class="text-center text-gray-400 py-10 text-sm">Chưa có sản phẩm nào</p>';
-                totalPrice.innerText = '0đ';
-                cartCount.innerText = '0';
+                container.innerHTML = '<div class="text-center py-10 opacity-30"><i class="fa-solid fa-cart-flatbed text-4xl mb-2"></i><p class="text-xs">Chưa có sản phẩm</p></div>';
+                totalHienThi.innerText = '0đ';
                 return;
             }
 
-            let total = 0;
-            cartContainer.innerHTML = '';
-            
-            cart.forEach((item, i) => {
-                // Tự động chọn giá theo nhóm khách
-                const giaApDung = (currentGroup === "Sỉ") ? item.giaSi : item.giaLe;
-                const thanhTien = giaApDung * item.qty;
-                total += thanhTien;
+            let tongTien = 0;
+            container.innerHTML = '';
 
-                cartContainer.innerHTML += `
-                    <div class="flex justify-between items-start border-b border-gray-50 pb-2">
+            cart.forEach((item, i) => {
+                const giaDung = (currentGroup === "Sỉ") ? item.giaSi : item.giaLe;
+                const thanhTien = giaDung * item.qty;
+                tongTien += thanhTien;
+
+                container.innerHTML += `
+                    <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex justify-between items-center animate-fade-in">
                         <div class="flex-1">
-                            <div class="text-xs font-bold text-gray-700">${item.name}</div>
-                            <div class="text-[10px] text-gray-400">${parseInt(giaApDung).toLocaleString()}đ x ${item.qty}</div>
+                            <h4 class="text-xs font-bold text-slate-800">${item.name}</h4>
+                            <p class="text-[10px] text-blue-600 font-medium">${parseInt(giaDung).toLocaleString()}đ x ${item.qty}</p>
                         </div>
-                        <div class="flex flex-col items-end">
-                            <div class="text-xs font-bold text-blue-600">${thanhTien.toLocaleString()}đ</div>
-                            <button onclick="removeFromCart(${i})" class="text-red-400 text-[10px] mt-1"><i class="fa-solid fa-trash"></i></button>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-black text-slate-700">${thanhTien.toLocaleString()}đ</span>
+                            <button onclick="removeFromCart(${i})" class="text-slate-300 hover:text-red-500 transition"><i class="fa-solid fa-circle-xmark"></i></button>
                         </div>
                     </div>
                 `;
             });
 
-            totalPrice.innerText = total.toLocaleString() + 'đ';
-            cartCount.innerText = cart.reduce((sum, item) => sum + item.qty, 0);
+            totalHienThi.innerText = tongTien.toLocaleString() + 'đ';
         }
 
-        function removeFromCart(i) {
-            cart.splice(i, 1);
+        function removeFromCart(index) {
+            cart.splice(index, 1);
             updateCartUI();
         }
 
-        async function checkout() {
-            if (cart.length === 0) return alert("Giỏ hàng trống!");
-            alert("Đã ghi nhận đơn hàng thành công!");
-            console.log("Dữ liệu gửi đi:", { khach: document.getElementById('select-khach').options[document.getElementById('select-khach').selectedIndex].text, chiTiet: cart });
+        function checkout() {
+            if (!document.getElementById('select-khach').value) return alert("Vui lòng chọn Khách hàng trước!");
+            if (cart.length === 0) return alert("Giỏ hàng đang trống!");
+            
+            alert("Đã xác nhận đơn hàng thành công!");
             cart = [];
             updateCartUI();
         }
