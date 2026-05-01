@@ -1,316 +1,177 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Tạp Hoá Kim Ngọc</title>
-  <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin:0; background:#f5f5f5; padding-bottom: 100px;}
-    .container { padding:15px; max-width: 600px; margin: auto; }
-    
-    /* Header */
-    .shop-header { background: #fff; padding: 20px; text-align: center; border-bottom: 2px solid #28a745; margin-bottom: 10px; }
-    .shop-header h1 { margin: 0 0 10px; color: #28a745; font-size: 24px; }
-    .shop-info { font-size: 14px; color: #555; line-height: 1.6; }
-    .shop-info a { color: #007bff; text-decoration: none; font-weight: bold; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tạp Hoá Kim Ngọc</title>
 
-    /* Giỏ hàng nằm trên */
-    .cart-preview {
-      background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 15px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: 1px solid #28a745;
-    }
-    .cart-preview h3 { margin: 0 0 10px 0; color: #28a745; font-size: 16px; display: flex; justify-content: space-between; }
-    
-    .customer-select {
-      width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd;
-      margin-bottom: 10px; outline: none; font-weight: bold; color: #333;
-    }
+<style>
+body { font-family: sans-serif; margin:0; background:#f5f5f5; }
+.container { max-width:600px; margin:auto; padding:10px;}
 
-    /* Ô tìm kiếm */
-    .search-box { position: sticky; top: 0; background: #f5f5f5; padding: 10px 0; z-index: 90; }
-    #searchInput {
-      width: 100%; padding: 12px 15px; border: 2px solid #28a745; border-radius: 25px;
-      box-sizing: border-box; outline: none; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-    
-    /* Danh sách sản phẩm */
-    .card { 
-      border: none; margin-bottom: 15px; padding: 12px; 
-      background: #fff; border-radius: 12px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      display: flex; gap: 15px; align-items: center;
-    }
-    .card img { border-radius: 8px; width: 70px; height: 70px; object-fit: cover; background: #eee; }
-    .card-info { flex: 1; }
-    .card-info h3 { margin: 0; font-size: 15px; color: #333; }
-    .card-info p { color: #e44d26; font-weight: bold; margin: 4px 0; }
-    
-    .btn-add { 
-      padding: 8px 15px; background: #28a745; color: white; 
-      border: none; border-radius: 6px; cursor: pointer; font-weight: bold;
-    }
+.shop-header {
+  background:#fff; padding:15px; text-align:center;
+  border-bottom:2px solid #28a745;
+}
 
-    /* Chi tiết giỏ hàng */
-    .cart-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 14px; }
-    .qty-controls { display: flex; align-items: center; gap: 8px; }
-    .btn-qty { width: 24px; height: 24px; border-radius: 50%; border: 1px solid #ddd; background: #fff; cursor: pointer; }
+.search-box {
+  position: sticky; top:0; background:#f5f5f5; padding:10px;
+}
 
-    /* Footer bar */
-    .cart-bar { 
-      position: fixed; bottom: 0; width: 100%; max-width: 600px;
-      left: 50%; transform: translateX(-50%); background: #fff; 
-      padding: 12px 15px; border-top: 1px solid #ddd;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-      display: flex; justify-content: space-between; align-items: center;
-      box-sizing: border-box; z-index: 101;
-    }
-    .btn-order { padding: 12px 20px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-  </style>
+#searchInput {
+  width:100%; padding:10px; border-radius:20px;
+  border:2px solid #28a745;
+}
+
+.card {
+  background:#fff; padding:10px; margin:10px 0;
+  border-radius:10px; display:flex; justify-content:space-between;
+}
+
+.cart-box {
+  background:#fff; padding:10px; border-radius:10px;
+  margin-bottom:10px;
+}
+
+button {
+  background:#28a745; color:#fff;
+  border:none; padding:8px 12px; border-radius:6px;
+}
+</style>
 </head>
+
 <body>
 
 <div class="shop-header">
-  <h1>TẠP HOÁ KIM NGỌC</h1>
-  <div class="shop-info">
-    📞 Hotline: <a href="tel:0963839220">096.38.39.220</a><br>
-    📍 Ấp Long An 1, Xã Phước Vĩnh Tây, Cần Giuộc, Long An
-  </div>
+  <h2>TẠP HOÁ KIM NGỌC</h2>
 </div>
 
 <div class="container">
-  <!-- PHẦN 1: GIỎ HÀNG NẰM TRÊN -->
-  <div class="cart-preview">
-    <h3>🛒 ĐƠN HÀNG <span id="price-type" style="font-size: 10px; color: #888;">(Giá lẻ)</span></h3>
-    
-    <!-- Chọn khách hàng -->
-    <select id="customerSelect" class="customer-select" onchange="updatePriceByCustomer()">
-      <option value="" data-group="Khách Lẻ">-- Chọn khách hàng --</option>
-    </select>
 
-    <div id="cartItems" style="max-height: 200px; overflow-y: auto;">
-      <p style="color: #aaa; font-size: 13px; font-style: italic;">Chưa có sản phẩm...</p>
-    </div>
-    
-    <div style="text-align: right; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; font-weight: bold;">
-      Tổng: <span id="cartTotalTop" style="color: #e44d26;">0</span> đ
-    </div>
-  </div>
+<!-- GIỎ -->
+<div class="cart-box">
+  <h3>🛒 Đơn hàng</h3>
+  <select id="customerSelect"></select>
 
-  <!-- PHẦN 2: TÌM KIẾM -->
-  <div class="search-box">
-    <input type="text" id="searchInput" placeholder="Tìm tên sản phẩm..." oninput="filterProducts()">
-  </div>
+  <div id="cart"></div>
 
-  <!-- PHẦN 3: DANH SÁCH SẢN PHẨM -->
-  <div id="products">Đang tải sản phẩm...</div>
+  <b>Tổng: <span id="total">0</span> đ</b>
 </div>
 
-<!-- Thanh thanh toán cố định -->
-<div class="cart-bar">
-  <button class="btn-order" onclick="submitOrder()">THANH TOÁN & LƯU</button>
-  <button class="btn-order" onclick="printBill()">IN BILL</button>
+<!-- SEARCH -->
+<div class="search-box">
+  <input id="searchInput" placeholder="Tìm sản phẩm..." oninput="searchProducts()">
+</div>
+
+<!-- PRODUCTS -->
+<div id="products">🔍 Nhập để tìm...</div>
+
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbwGLgt_mKOW7r73TRONd3Zypo9fP9fLMWK3wLCg0PYwvHiYNSXXJlmdnPoR9VZrSx603Q/exec";
-let allProducts = [];
-let allCustomers = [];
+const API = "https://script.google.com/macros/s/AKfycbzcSpINAuj5CKGbdlvDwy-w4IZhl04nI9iMP9xKt-BpRhJ47kzCxxs3B5m4C1CSlcFrlQ/exec";
+
 let cart = [];
+let customers = [];
 let currentGroup = "Khách Lẻ";
+let searchTimeout;
 
-async function loadData() {
-  try {
-    const res = await fetch(API);
-    const data = await res.json();
-    allProducts = data.products;
-    allCustomers = data.customers;
-    
-    // Load khách hàng vào select
-    const cSelect = document.getElementById("customerSelect");
-    allCustomers.forEach(c => {
-      const opt = document.createElement("option");
-      opt.value = c.name;
-      opt.text = `${c.name} (${c.group})`;
-      opt.dataset.group = c.group;
-      cSelect.appendChild(opt);
-    });
+// LOAD KHÁCH
+async function loadCustomers(){
+  const res = await fetch(API + "?type=customers");
+  const data = await res.json();
 
-    displayProducts(allProducts);
-  } catch (e) {
-    document.getElementById("products").innerHTML = "Lỗi kết nối dữ liệu.";
-  }
-}
-function printBill() {
-  if (cart.length === 0) return alert("Chưa có sản phẩm!");
+  customers = data;
 
-  let content = `
-    <div style="font-family: monospace; width: 280px;">
-      <h3 style="text-align:center;">TẠP HOÁ KIM NGỌC</h3>
-      <p>-----------------------------</p>
-  `;
+  const select = document.getElementById("customerSelect");
+  select.innerHTML = "";
 
-  let total = 0;
-
-  cart.forEach(i => {
-    const price = i.customPrice || (currentGroup === "Khách Sỉ" ? i.si : i.le);
-    const subtotal = price * i.qty;
-    total += subtotal;
-
-    content += `
-      <div>
-        ${i.name}<br>
-        ${i.qty} x ${price.toLocaleString()} = ${subtotal.toLocaleString()}
-      </div>
-    `;
+  customers.forEach(c=>{
+    select.innerHTML += `<option data-group="${c.group}">
+      ${c.name} (${c.group})
+    </option>`;
   });
-
-  content += `
-      <p>-----------------------------</p>
-      <b>TỔNG: ${total.toLocaleString()} đ</b>
-      <p style="text-align:center;">Cảm ơn quý khách!</p>
-    </div>
-  `;
-
-  const printWindow = window.open("", "", "width=300,height=600");
-  printWindow.document.write(content);
-  printWindow.document.close();
-  printWindow.print();
 }
 
-  
-function displayProducts(data) {
+// SEARCH SẢN PHẨM
+function searchProducts(){
+  clearTimeout(searchTimeout);
+
+  searchTimeout = setTimeout(async ()=>{
+    const kw = document.getElementById("searchInput").value;
+
+    if(kw.length < 2){
+      document.getElementById("products").innerHTML = "Nhập ít nhất 2 ký tự...";
+      return;
+    }
+
+    const res = await fetch(API + "?search=" + encodeURIComponent(kw));
+    const data = await res.json();
+
+    displayProducts(data);
+
+  },300);
+}
+
+// HIỂN THỊ SP
+function displayProducts(data){
   const el = document.getElementById("products");
   el.innerHTML = "";
-  data.forEach(p => {
-    // Luôn hiển thị giá lẻ ở danh sách để tham khảo
+
+  data.forEach(p=>{
     el.innerHTML += `
       <div class="card">
-        <img src="${p.img || 'https://placeholder.com'}" alt="${p.name}">
-        <div class="card-info">
-          <h3>${p.name}</h3>
-          <p>${Number(p.le).toLocaleString()} đ</p>
-          <small style="color: #999">Mã: ${p.id}</small>
+        <div>
+          ${p.name}<br>
+          ${Number(p.le).toLocaleString()} đ
         </div>
-        <button class="btn-add" onclick="addToCart('${p.id}')">Mua</button>
+        <button onclick="addCart('${p.id}','${p.name}',${p.le},${p.si})">Mua</button>
       </div>`;
   });
 }
 
-function updatePriceByCustomer() {
-  const sel = document.getElementById("customerSelect");
-  const opt = sel.options[sel.selectedIndex];
-  currentGroup = opt.dataset.group || "Khách Lẻ";
-  document.getElementById("price-type").innerText = `(Giá ${currentGroup === "Khách Sỉ" ? "Sỉ" : "Lẻ"})`;
+// THÊM GIỎ
+function addCart(id,name,le,si){
+  let i = cart.find(x=>x.id==id);
+
+  if(i) i.qty++;
+  else cart.push({id,name,le,si,qty:1});
+
   renderCart();
 }
 
-function addToCart(id) {
-  const p = allProducts.find(item => item.id == id);
-  let item = cart.find(i => i.id == id);
-  if (item) {
-    item.qty++;
-  } else {
-    cart.push({ ...p, qty: 1 });
-  }
-  renderCart();
-}
-
-function changeQty(id, delta) {
-  let item = cart.find(i => i.id == id);
-  if (item) {
-    item.qty += delta;
-    if (item.qty <= 0) cart = cart.filter(i => i.id != id);
-    renderCart();
-  }
-}
-
-function renderCart() {
-  const container = document.getElementById("cartItems");
+// GIỎ
+function renderCart(){
+  const el = document.getElementById("cart");
   let total = 0;
-  
-  if (cart.length === 0) {
-    container.innerHTML = `<p style="color: #aaa; font-size: 13px; font-style: italic;">Chưa có sản phẩm...</p>`;
-    document.getElementById("cartTotalTop").innerText = "0";
-    document.getElementById("cartTotalBar").innerText = "0";
-    return;
-  }
 
-  container.innerHTML = "";
-  cart.forEach(i => {
-    // Lấy giá dựa trên nhóm khách hàng
-   const price = i.customPrice || (currentGroup === "Khách Sỉ" ? i.si : i.le);
-    const subtotal = price * i.qty;
-    total += subtotal;
+  el.innerHTML = "";
 
-container.innerHTML += `
-  <div class="cart-item">
-    <div style="flex: 1;">
-      <b>${i.name}</b><br>
-      <input type="number" value="${price}" 
-        onchange="updatePrice('${i.id}', this.value)" 
-        style="width:80px; font-size:13px;">
-    </div>
-    <div class="qty-controls">
-      <button class="btn-qty" onclick="changeQty('${i.id}', -1)">-</button>
-      <span>${i.qty}</span>
-      <button class="btn-qty" onclick="changeQty('${i.id}', 1)">+</button>
-    </div>
-  </div>`;
+  cart.forEach(i=>{
+    const price = i.custom || i.le;
+    const sub = price * i.qty;
+    total += sub;
+
+    el.innerHTML += `
+      <div>
+        ${i.name}<br>
+        <input value="${price}" onchange="setPrice('${i.id}',this.value)">
+        x ${i.qty}
+      </div>`;
   });
 
-  document.getElementById("cartTotalTop").innerText = total.toLocaleString();
-  document.getElementById("cartTotalBar").innerText = total.toLocaleString();
+  document.getElementById("total").innerText = total.toLocaleString();
 }
 
-function filterProducts() {
-  const kw = document.getElementById("searchInput").value.toLowerCase();
-  const filtered = allProducts.filter(p => p.name.toLowerCase().includes(kw));
-  displayProducts(filtered);
-}
-function updatePrice(id, newPrice) {
-  let item = cart.find(i => i.id == id);
-  if (item) {
-    item.customPrice = Number(newPrice);
-    renderCart();
-  }
-}
-  
-async function submitOrder() {
-  if (cart.length === 0) return alert("Vui lòng chọn sản phẩm!");
-  
-  const customerName = document.getElementById("customerSelect").value || "Khách lẻ";
-  const total = document.getElementById("cartTotalBar").innerText;
-
-  const orderData = {
-    action: "saveOrder",
-    customerName: customerName,
-    total: total + " đ",
-    items: cart.map(i => ({
-      name: i.name,
-      qty: i.qty,
-      price: currentGroup === "Khách Sỉ" ? i.si : i.le
-    }))
-  };
-
-  try {
-    const res = await fetch(API, {
-      method: "POST",
-      body: JSON.stringify(orderData)
-    });
-    const result = await res.text();
-    if (result === "Success") {
-      alert("Đã lưu đơn hàng thành công!");
-      cart = [];
-      renderCart();
-    } else {
-      alert("Lỗi: " + result);
-    }
-  } catch (e) {
-    alert("Lỗi kết nối khi gửi đơn hàng!");
-  }
+function setPrice(id,val){
+  let i = cart.find(x=>x.id==id);
+  i.custom = Number(val);
+  renderCart();
 }
 
-loadData();
+// INIT
+loadCustomers();
 </script>
+
 </body>
 </html>
