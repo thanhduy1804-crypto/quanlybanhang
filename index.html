@@ -1,302 +1,256 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kiot Pro - New UI</title>
-    <script src="https://tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cloudflare.com">
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
-        .tab-content { display: none; min-height: 100vh; }
-        .tab-content.active { display: block; animation: fadeIn 0.2s ease-out; }
-        .active-nav { color: #2563eb !important; background-color: #eff6ff; border-radius: 1rem; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        #bill-print { display: none; }
-        @media print {
-            body * { visibility: hidden; }
-            #bill-print, #bill-print * { visibility: visible; }
-            #bill-print { display: block !important; position: absolute; left: 0; top: 0; width: 80mm; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Tạp Hoá Kim Ngọc</title>
+  <style>
+    /* Giữ nguyên các style cũ và thêm style cho phần chọn khách */
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin:0; background:#f5f5f5; padding-bottom: 100px;}
+    .container { padding:15px; max-width: 600px; margin: auto; }
+    .shop-header { background: #fff; padding: 20px; text-align: center; border-bottom: 2px solid #28a745; margin-bottom: 10px; }
+    .shop-header h1 { margin: 0 0 10px; color: #28a745; font-size: 24px; }
+    .shop-info { font-size: 14px; color: #555; line-height: 1.6; }
+    .shop-info a { color: #007bff; text-decoration: none; font-weight: bold; }
+
+    .search-box { position: sticky; top: 0; background: #f5f5f5; padding: 10px 0; z-index: 90; }
+    #searchInput {
+      width: 100%; padding: 12px 15px; border: 2px solid #28a745; border-radius: 25px;
+      box-sizing: border-box; outline: none; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    
+    .card { 
+      border: none; margin-bottom: 15px; padding: 15px; 
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      display: flex; gap: 15px; align-items: center;
+    }
+    .card img { border-radius: 8px; width: 85px; height: 85px; object-fit: cover; background: #eee; }
+    .card-info { flex: 1; }
+    .card-info h3 { margin: 0; font-size: 15px; color: #333; font-weight: 600; }
+    .card-info .price-tag { color: #e44d26; font-weight: bold; margin: 4px 0; display: block; }
+    .stock-tag { font-size: 11px; color: #888; }
+    
+    .btn-add { 
+      padding: 8px 15px; background: #28a745; color: white; 
+      border: none; border-radius: 6px; cursor: pointer; font-weight: bold;
+    }
+
+    /* Giỏ hàng nâng cấp */
+    #cartDetails {
+      display: none; position: fixed; bottom: 70px; left: 50%;
+      transform: translateX(-50%); width: 100%; max-width: 600px;
+      background: #fff; border-radius: 20px 20px 0 0;
+      box-shadow: 0 -5px 25px rgba(0,0,0,0.2); z-index: 100;
+      max-height: 75vh; overflow-y: auto; padding: 20px; box-sizing: border-box;
+    }
+    .customer-box {
+      background: #f8f9fa; border-radius: 10px; padding: 12px; margin-bottom: 15px; border: 1px solid #eee;
+    }
+    .customer-box label { font-size: 12px; color: #666; font-weight: bold; display: block; margin-bottom: 5px; }
+    .customer-box select { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #ddd; outline: none; font-weight: bold; color: #2563eb; }
+
+    .cart-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee; align-items: center; }
+    .btn-qty { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #ddd; background: #f8f9fa; cursor: pointer; }
+    
+    .cart-bar { 
+      position: fixed; bottom: 0; width: 100%; max-width: 600px;
+      left: 50%; transform: translateX(-50%); background: #fff; 
+      padding: 15px; border-top: 1px solid #ddd;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      display: flex; justify-content: space-between; align-items: center;
+      box-sizing: border-box; z-index: 101;
+    }
+    .btn-order { padding: 12px 25px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 99; }
+  </style>
 </head>
-<body class="text-gray-900 pb-24">
+<body>
 
-    <!-- 1. TAB BÁN HÀNG -->
-    <div id="tab-pos" class="tab-content active">
-        <header class="bg-white border-b p-4 sticky top-0 z-40 flex justify-between items-center shadow-sm">
-            <span class="font-black text-xl text-blue-600 italic tracking-tighter uppercase">Kiot Pro</span>
-            <button onclick="location.reload()" class="text-gray-400 p-2"><i class="fa fa-sync-alt"></i></button>
-        </header>
-        <main class="p-4 space-y-4">
-            <!-- Chọn khách hàng -->
-            <div class="bg-white rounded-2xl shadow-sm border p-4 flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600"><i class="fa fa-user"></i></div>
-                <select id="cSelect" class="flex-1 bg-transparent outline-none font-bold text-gray-700" onchange="updateCartUI()"></select>
-            </div>
-            <!-- Giỏ hàng -->
-            <div class="bg-white rounded-2xl shadow-sm border p-4 min-h-[40vh] flex flex-col">
-                <div class="flex justify-between items-center border-b pb-3 mb-3">
-                    <span class="font-bold text-gray-600">Đơn hàng</span>
-                    <button onclick="openModal('modal-select-p')" class="bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg">+ THÊM MÓN</button>
-                </div>
-                <div id="cartItems" class="space-y-4 flex-1"></div>
-            </div>
-            <!-- Thanh toán -->
-            <div class="bg-blue-600 rounded-2xl p-5 text-white shadow-xl">
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-lg font-medium">Tổng tiền (<span id="totalItems">0</span>)</span>
-                    <span id="totalVal" class="text-2xl font-black">0đ</span>
-                </div>
-                <button onclick="saveAndPrint()" class="w-full bg-white text-blue-600 py-4 rounded-xl font-black text-lg active:scale-95 transition">THANH TOÁN & IN</button>
-            </div>
-        </main>
-    </div>
+<div class="shop-header">
+  <h1>TẠP HOÁ KIM NGỌC</h1>
+  <div class="shop-info">
+    📞 Hotline: <a href="tel:0963839220">096.38.39.220</a><br>
+    📍 Cần Giuộc, Long An
+  </div>
+</div>
 
-    <!-- 2. TAB SẢN PHẨM -->
-    <div id="tab-products" class="tab-content">
-        <header class="bg-white border-b p-4 sticky top-0 z-40 flex justify-between items-center">
-            <h1 class="font-black text-lg">SẢN PHẨM</h1>
-            <button onclick="openProductForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">+ THÊM</button>
-        </header>
-        <main class="p-4">
-            <div class="relative mb-4">
-                <i class="fa fa-search absolute left-4 top-3.5 text-gray-400"></i>
-                <input type="text" placeholder="Tìm kiếm sản phẩm..." class="w-full pl-12 pr-4 py-3 bg-white border rounded-xl outline-none shadow-sm" oninput="renderAdminProducts(this.value)">
-            </div>
-            <div id="admin-p-list" class="space-y-3"></div>
-        </main>
-    </div>
+<div class="container">
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Tìm tên sản phẩm..." oninput="filterProducts()">
+  </div>
+  <div id="products">Đang tải sản phẩm...</div>
+</div>
 
-    <!-- 3. TAB KHÁCH HÀNG -->
-    <div id="tab-customers" class="tab-content">
-        <header class="bg-white border-b p-4 sticky top-0 z-40 flex justify-between items-center">
-            <h1 class="font-black text-lg">KHÁCH HÀNG</h1>
-            <button onclick="openCustomerForm()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">+ THÊM</button>
-        </header>
-        <main class="p-4">
-            <div id="admin-c-list" class="space-y-3"></div>
-        </main>
-    </div>
+<div class="overlay" id="overlay" onclick="toggleCart()"></div>
 
-    <!-- FOOTER NAV -->
-    <nav class="fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md border rounded-3xl flex justify-around p-2 z-50 shadow-2xl">
-        <button onclick="showTab('pos')" id="nav-pos" class="flex flex-col items-center gap-1 py-2 px-6 active-nav transition-all">
-            <i class="fa fa-cash-register text-lg"></i><span class="text-[10px] font-bold">Bán hàng</span>
-        </button>
-        <button onclick="showTab('products')" id="nav-products" class="flex flex-col items-center gap-1 py-2 px-6 text-gray-400 transition-all">
-            <i class="fa fa-box text-lg"></i><span class="text-[10px] font-bold">Sản phẩm</span>
-        </button>
-        <button onclick="showTab('customers')" id="nav-customers" class="flex flex-col items-center gap-1 py-2 px-6 text-gray-400 transition-all">
-            <i class="fa fa-users text-lg"></i><span class="text-[10px] font-bold">Khách hàng</span>
-        </button>
-    </nav>
+<div id="cartDetails">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+    <h3 style="margin: 0;">🛒 Đơn hàng</h3>
+    <button onclick="toggleCart()" style="border:none; background:none; font-size: 20px;">✕</button>
+  </div>
 
-    <!-- MODAL CHỌN SẢN PHẨM -->
-    <div id="modal-select-p" class="fixed inset-0 bg-black/60 z-50 hidden flex items-end">
-        <div class="bg-white w-full h-[85vh] rounded-t-[2rem] flex flex-col p-6 shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <span class="font-black text-lg uppercase tracking-tight">Chọn hàng hóa</span>
-                <button onclick="closeModal('modal-select-p')" class="w-10 h-10 bg-gray-100 rounded-full text-gray-500 font-bold">&times;</button>
-            </div>
-            <input type="text" id="pSearch" placeholder="Tìm tên hàng nhanh..." class="w-full p-4 bg-gray-100 rounded-2xl mb-4 outline-none border focus:border-blue-400" oninput="renderPOSProducts()">
-            <div id="pos-p-list" class="space-y-3 overflow-y-auto hide-scrollbar pb-10"></div>
+  <!-- PHẦN CHỌN KHÁCH HÀNG -->
+  <div class="customer-box">
+    <label>LOẠI KHÁCH HÀNG</label>
+    <select id="customerType" onchange="changeCustomerType()">
+      <option value="le">Khách Lẻ (Giá bán lẻ)</option>
+      <option value="si">Khách Sỉ (Giá bán sỉ)</option>
+    </select>
+  </div>
+
+  <div id="cartItems"></div>
+  <div style="text-align: right; font-weight: bold; margin-top: 20px; font-size: 18px; border-top: 2px solid #eee; padding-top: 10px;">
+    Tổng: <span id="cartModalTotal" style="color: #e44d26;">0</span> VND
+  </div>
+</div>
+
+<div class="cart-bar">
+  <div onclick="toggleCart()" style="cursor:pointer; flex: 1;">
+    🛒 <span id="cartCount" style="background:#e44d26; color:#fff; padding:2px 8px; border-radius:10px; font-size:12px;">0</span> món | <b><span id="cartTotal">0</span> đ</b>
+  </div>
+  <button class="btn-order" onclick="openCheckout()">ĐẶT HÀNG</button>
+</div>
+
+<script>
+// URL App Script của bạn
+const API = "https://google.com";
+let allProducts = [];
+let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+let currentCustomerType = localStorage.getItem("customerType") || "le";
+
+function removeAccents(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+}
+
+async function loadProducts() {
+  try {
+    const res = await fetch(`${API}?action=products`);
+    allProducts = await res.json();
+    document.getElementById("customerType").value = currentCustomerType;
+    displayProducts(allProducts);
+    renderUI();
+  } catch (e) {
+    document.getElementById("products").innerHTML = "Lỗi kết nối dữ liệu.";
+  }
+}
+
+function displayProducts(data) {
+  const el = document.getElementById("products");
+  el.innerHTML = "";
+  data.forEach(p => {
+    // Luôn hiển thị giá lẻ ở danh sách bên ngoài để khách dễ tham khảo, 
+    // hoặc có thể đổi theo currentCustomerType tùy bạn.
+    const displayPrice = currentCustomerType === 'si' ? p.price_si : p.price; 
+    const isOutOfStock = p.stock <= 0;
+    el.innerHTML += `
+      <div class="card">
+        <img src="${p.image || 'https://placeholder.com'}" alt="${p.name}">
+        <div class="card-info">
+          <h3>${p.name}</h3>
+          <span class="price-tag">${Number(displayPrice).toLocaleString()} VND</span>
+          <span class="stock-tag">${isOutOfStock ? '❌ Hết hàng' : '✔️ Còn: ' + p.stock}</span>
         </div>
-    </div>
+        <button class="btn-add" ${isOutOfStock ? 'disabled' : ''} onclick="addToCart('${p.id}')">
+          ${isOutOfStock ? 'Hết' : 'Mua'}
+        </button>
+      </div>`;
+  });
+}
 
-    <!-- FORM MODAL -->
-    <div id="modal-form" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-6">
-        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl">
-            <h3 id="form-title" class="font-black text-lg mb-5 text-blue-600 border-b pb-2 italic uppercase">Cập nhật</h3>
-            <div id="form-fields" class="space-y-4"></div>
-            <div class="flex gap-3 mt-8">
-                <button onclick="closeModal('modal-form')" class="flex-1 py-3 bg-gray-100 rounded-2xl font-bold text-gray-400">HỦY</button>
-                <button id="btnSave" class="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-bold">LƯU</button>
-            </div>
+function filterProducts() {
+  const kw = removeAccents(document.getElementById("searchInput").value.toLowerCase());
+  displayProducts(allProducts.filter(p => removeAccents(p.name.toLowerCase()).includes(kw)));
+}
+
+function changeCustomerType() {
+  currentCustomerType = document.getElementById("customerType").value;
+  localStorage.setItem("customerType", currentCustomerType);
+  // Cập nhật lại toàn bộ giao diện và giá trong giỏ
+  displayProducts(allProducts);
+  renderUI();
+}
+
+function addToCart(id) {
+  const p = allProducts.find(item => item.id == id);
+  let item = cart.find(i => i.id == id);
+  if (item) {
+    if (item.quantity < p.stock) item.quantity++;
+    else alert("Hết hàng trong kho!");
+  } else {
+    // Lưu cả giá sỉ và giá lẻ vào item để lúc render tính toán
+    cart.push({ ...p, quantity: 1 });
+  }
+  saveCart();
+}
+
+function updateQty(id, change) {
+  let item = cart.find(i => i.id == id);
+  const p = allProducts.find(prod => prod.id == id);
+  if (item) {
+    if (change > 0 && item.quantity >= p.stock) return alert("Hết hàng!");
+    item.quantity += change;
+    if (item.quantity <= 0) return removeItem(id);
+    saveCart();
+  }
+}
+
+function removeItem(id) { cart = cart.filter(i => i.id != id); saveCart(); }
+function saveCart() { localStorage.setItem("cart", JSON.stringify(cart)); renderUI(); }
+
+function toggleCart() {
+  const isOpen = document.getElementById("cartDetails").style.display === "block";
+  document.getElementById("cartDetails").style.display = isOpen ? "none" : "block";
+  document.getElementById("overlay").style.display = isOpen ? "none" : "block";
+}
+
+function renderUI() {
+  let total = 0, count = 0;
+  const cartItemsEl = document.getElementById("cartItems");
+  cartItemsEl.innerHTML = cart.length === 0 ? "<p style='text-align:center;color:#888;'>Giỏ hàng trống</p>" : "";
+  
+  cart.forEach(i => {
+    // CHỌN GIÁ DỰA TRÊN LOẠI KHÁCH
+    const activePrice = currentCustomerType === 'si' ? i.price_si : i.price;
+    total += activePrice * i.quantity; 
+    count += i.quantity;
+    
+    cartItemsEl.innerHTML += `
+      <div class="cart-item">
+        <div style="flex:1">
+          <b style="font-size:14px;">${i.name}</b><br>
+          <small style="color:#2563eb">${Number(activePrice).toLocaleString()}đ x ${i.quantity}</small>
         </div>
-    </div>
+        <div class="qty-controls">
+          <button class="btn-qty" onclick="updateQty('${i.id}', -1)">-</button>
+          <span style="min-width:20px; text-align:center; font-weight:bold">${i.quantity}</span>
+          <button class="btn-qty" onclick="updateQty('${i.id}', 1)">+</button>
+          <button style="border:none; color:red; background:none; margin-left:5px" onclick="removeItem('${i.id}')">✕</button>
+        </div>
+      </div>`;
+  });
+  
+  document.getElementById("cartTotal").innerText = total.toLocaleString();
+  document.getElementById("cartModalTotal").innerText = total.toLocaleString();
+  document.getElementById("cartCount").innerText = count;
+}
 
-    <!-- BILL IN ẨN -->
-    <div id="bill-print" class="font-mono p-4 text-[10pt]">
-        <center><strong>HÓA ĐƠN BÁN HÀNG</strong><br>--------------------------------</center>
-        <div id="bill-info" class="my-4"></div>
-        <table class="w-full border-t border-b border-black border-dashed my-4">
-            <thead><tr class="text-left"><th>Sản phẩm</th><th class="text-right">SL</th></tr></thead>
-            <tbody id="bill-items"></tbody>
-        </table>
-        <div id="bill-total" class="text-right font-black text-[13pt]"></div>
-        <center class="mt-8">Cảm ơn & Hẹn gặp lại!</center>
-    </div>
+function openCheckout() {
+  if (cart.length === 0) return alert("Giỏ hàng đang trống!");
+  const typeText = currentCustomerType === 'si' ? "KHÁCH SỈ" : "KHÁCH LẺ";
+  let msg = `ĐƠN HÀNG MỚI (${typeText})\n------------------\n`;
+  
+  cart.forEach(i => {
+    const activePrice = currentCustomerType === 'si' ? i.price_si : i.price;
+    msg += `- ${i.name}\n  SL: ${i.quantity} x ${Number(activePrice).toLocaleString()}đ = ${(activePrice * i.quantity).toLocaleString()}đ\n`;
+  });
+  
+  msg += `------------------\nTỔNG CỘNG: ${document.getElementById("cartTotal").innerText} VND`;
+  window.open(`https://wa.me{encodeURIComponent(msg)}`);
+}
 
-    <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycby04hYPrGtuKQCUfyGS50oHlfHjxhoQ_wP7GL4_3HikJt_2OUyOX5E46Lu0jDRWbOqWrQ/exec";
-        let db = { products: [], customers: [] };
-        let cart = [];
+loadProducts();
+</script>
 
-        async function init() {
-            try {
-                const res = await fetch(API_URL);
-                const raw = await res.json();
-                db.products = raw.products.map(p => ({ id: String(p.id), name: p.name || 'Không tên', si: Number(p.si) || 0, le: Number(p.le) || 0, img: p.img || '', cat: p.cat || '' }));
-                db.customers = raw.customers;
-                renderCustomerSelect();
-                renderAdminProducts();
-                renderAdminCustomers();
-            } catch (e) { alert("Lỗi tải dữ liệu!"); }
-        }
-
-        function showTab(tab) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('nav button').forEach(el => { el.classList.remove('active-nav'); el.classList.add('text-gray-400'); });
-            document.getElementById('tab-' + tab).classList.add('active');
-            const navBtn = document.getElementById('nav-' + tab);
-            navBtn.classList.add('active-nav'); navBtn.classList.remove('text-gray-400');
-        }
-
-        function renderCustomerSelect() {
-            const sel = document.getElementById('cSelect');
-            sel.innerHTML = '<option value="" data-group="Khách Lẻ">👤 Khách lẻ</option>';
-            db.customers.forEach(c => { sel.innerHTML += `<option value="${c.id}" data-group="${c.group}" data-name="${c.name}">👤 ${c.name}</option>`; });
-        }
-
-        // --- GIAO DIỆN CHỌN HÀNG (Ảnh bên phải, thông tin bên trái) ---
-        function renderPOSProducts() {
-            const list = document.getElementById('pos-p-list');
-            const search = document.getElementById('pSearch').value.toLowerCase();
-            list.innerHTML = "";
-            db.products.filter(p => p.name.toLowerCase().includes(search)).forEach(p => {
-                list.innerHTML += `
-                    <div class="bg-white p-3 rounded-2xl border flex justify-between items-center active:bg-blue-50 transition shadow-sm" onclick="addToCart('${p.id}')">
-                        <div class="flex-1 pr-3">
-                            <div class="font-bold text-sm text-gray-800 leading-tight">${p.name}</div>
-                            <div class="text-[10px] text-gray-400 mt-1 uppercase">${p.id}</div>
-                            <div class="text-blue-600 font-black text-sm mt-1">${p.le.toLocaleString()}đ</div>
-                        </div>
-                        <img src="${p.img || 'https://placeholder.com'}" class="w-14 h-14 object-cover rounded-xl border bg-gray-50 shadow-inner">
-                    </div>`;
-            });
-        }
-
-        function addToCart(id) {
-            const p = db.products.find(x => x.id === id);
-            const exist = cart.find(i => i.id === id);
-            if(exist) exist.qty++; else cart.push({...p, qty: 1});
-            updateCartUI();
-        }
-
-        function updateCartUI() {
-            const sel = document.getElementById('cSelect').selectedOptions;
-            const group = sel.dataset.group || "Khách Lẻ";
-            const container = document.getElementById('cartItems');
-            let total = 0, count = 0;
-            if(cart.length === 0) {
-                container.innerHTML = '<div class="text-center py-10 text-gray-300 italic text-sm">Chưa có món nào...</div>';
-                document.getElementById('totalVal').innerText = "0đ"; document.getElementById('totalItems').innerText = "0";
-                return;
-            }
-            container.innerHTML = cart.map((i, idx) => {
-                const price = (group === "Khách Sỉ") ? i.si : i.le;
-                total += price * i.qty; count += i.qty;
-                return `
-                <div class="flex justify-between items-center bg-gray-50 p-2 rounded-2xl border">
-                    <div class="flex items-center gap-3">
-                        <img src="${i.img || 'https://placeholder.com'}" class="w-10 h-10 object-cover rounded-lg border">
-                        <div>
-                            <div class="font-bold text-xs">${i.name}</div>
-                            <div class="text-blue-600 text-[10px] font-black">${price.toLocaleString()}đ</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="changeQty(${idx},-1)" class="w-7 h-7 bg-white rounded-full shadow text-red-500 font-bold">-</button>
-                        <span class="text-xs font-black w-4 text-center">${i.qty}</span>
-                        <button onclick="changeQty(${idx},1)" class="w-7 h-7 bg-blue-600 rounded-full shadow text-white font-bold">+</button>
-                    </div>
-                </div>`;
-            }).join('');
-            document.getElementById('totalVal').innerText = total.toLocaleString() + "đ";
-            document.getElementById('totalItems').innerText = count;
-        }
-
-        function changeQty(idx, d) { cart[idx].qty += d; if(cart[idx].qty <= 0) cart.splice(idx, 1); updateCartUI(); }
-
-        async function saveAndPrint() {
-            const sel = document.getElementById('cSelect').selectedOptions;
-            if(cart.length === 0) return alert("Vui lòng chọn hàng!");
-            document.getElementById('bill-info').innerHTML = `Khách: <strong>${sel.dataset.name || 'Khách lẻ'}</strong><br>Ngày: ${new Date().toLocaleString()}`;
-            document.getElementById('bill-items').innerHTML = cart.map(i => `<tr><td>${i.name}</td><td class="text-right">x${i.qty}</td></tr>`).join('');
-            document.getElementById('bill-total').innerText = "TỔNG: " + document.getElementById('totalVal').innerText;
-            window.print();
-            const data = { action: "saveOrder", customerName: sel.dataset.name || 'Khách lẻ', total: document.getElementById('totalVal').innerText, items: cart };
-            await fetch(API_URL, { method: "POST", body: JSON.stringify(data) });
-            alert("Lưu đơn thành công!"); cart = []; updateCartUI();
-        }
-
-        // --- QUẢN LÝ SẢN PHẨM (Ảnh nhỏ bên phải) ---
-        function renderAdminProducts(filter = "") {
-            const list = document.getElementById('admin-p-list');
-            list.innerHTML = db.products.filter(p => p.name.toLowerCase().includes(filter.toLowerCase())).map(p => `
-                <div class="bg-white p-3 rounded-2xl shadow-sm flex items-center justify-between border active:bg-gray-50" onclick="openProductForm('${p.id}')">
-                    <div class="flex-1">
-                        <div class="font-bold text-sm text-gray-800 leading-tight">${p.name}</div>
-                        <div class="text-[10px] text-blue-500 font-bold mt-1 tracking-wider uppercase">Lẻ: ${p.le.toLocaleString()}đ</div>
-                    </div>
-                    <img src="${p.img || 'https://placeholder.com'}" class="w-12 h-12 rounded-xl object-cover border shadow-sm ml-3">
-                </div>`).join('');
-        }
-
-        function renderAdminCustomers() {
-            const list = document.getElementById('admin-c-list');
-            list.innerHTML = db.customers.map(c => `
-                <div class="bg-white p-3 rounded-2xl shadow-sm flex justify-between items-center border active:bg-gray-50" onclick="openCustomerForm('${c.id}')">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-green-50 text-green-600 rounded-full flex items-center justify-center font-bold">${c.name.charAt(0)}</div>
-                        <div><div class="font-bold text-sm text-gray-800">${c.name}</div><div class="text-[10px] text-gray-400 font-medium">${c.group}</div></div>
-                    </div>
-                    <i class="fa fa-chevron-right text-gray-200"></i>
-                </div>`).join('');
-        }
-
-        function openProductForm(id = '') {
-            const p = db.products.find(x => x.id === id) || {id:'', name:'', si:0, le:0, img:''};
-            document.getElementById('form-title').innerText = id ? "Sửa hàng hóa" : "Thêm hàng hóa";
-            document.getElementById('form-fields').innerHTML = `
-                <input id="f-id" placeholder="Mã hàng" class="w-full p-4 bg-gray-50 border rounded-2xl" value="${p.id}">
-                <input id="f-name" placeholder="Tên sản phẩm" class="w-full p-4 bg-gray-50 border rounded-2xl font-bold text-gray-800" value="${p.name}">
-                <div class="grid grid-cols-2 gap-3">
-                    <input id="f-si" type="number" placeholder="Giá sỉ" class="p-4 bg-gray-50 border rounded-2xl" value="${p.si}">
-                    <input id="f-le" type="number" placeholder="Giá lẻ" class="p-4 bg-gray-50 border rounded-2xl text-blue-600 font-bold" value="${p.le}">
-                </div>
-                <input id="f-img" placeholder="Link ảnh (Tùy chọn)" class="w-full p-4 bg-gray-50 border rounded-2xl text-xs" value="${p.img}">`;
-            document.getElementById('btnSave').onclick = () => upsert('upsertProduct');
-            openModal('modal-form');
-        }
-
-        function openCustomerForm(id = '') {
-            const c = db.customers.find(x => x.id === id) || {id:'', name:'', group:'Khách Lẻ', phone:''};
-            document.getElementById('form-title').innerText = id ? "Sửa khách hàng" : "Thêm khách hàng";
-            document.getElementById('form-fields').innerHTML = `
-                <input id="f-id" placeholder="Mã khách" class="w-full p-4 bg-gray-50 border rounded-2xl" value="${c.id}">
-                <input id="f-name" placeholder="Tên khách" class="w-full p-4 bg-gray-50 border rounded-2xl font-bold" value="${c.name}">
-                <select id="f-group" class="w-full p-4 bg-gray-50 border rounded-2xl">
-                    <option ${c.group=='Khách Lẻ'?'selected':''}>Khách Lẻ</option>
-                    <option ${c.group=='Khách Sỉ'?'selected':''}>Khách Sỉ</option>
-                </select>
-                <input id="f-phone" placeholder="Số điện thoại" class="w-full p-4 bg-gray-50 border rounded-2xl" value="${c.phone}">`;
-            document.getElementById('btnSave').onclick = () => upsert('upsertCustomer');
-            openModal('modal-form');
-        }
-
-        async function upsert(action) {
-            const item = {};
-            document.querySelectorAll('#form-fields [id^="f-"]').forEach(el => { item[el.id.replace('f-', '')] = el.value; });
-            document.getElementById('btnSave').innerText = "ĐANG LƯU...";
-            await fetch(API_URL, { method: "POST", body: JSON.stringify({action, item}) });
-            location.reload();
-        }
-
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); if(id=='modal-select-p') renderPOSProducts(); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-        init();
-    </script>
 </body>
 </html>
