@@ -3,128 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tính Toán Đơn Hàng</title>
+    <title>Hệ Thống Giỏ Hàng Thông Minh</title>
     <script src="https://tailwindcss.com"></script>
+    <link href="https://cloudflare.com" rel="stylesheet">
 </head>
-<body class="bg-gray-50 p-4">
+<body class="bg-gray-100 min-h-screen">
 
-    <div class="max-w-xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-200">
-        <div class="bg-emerald-600 p-4 text-white">
-            <h1 class="text-lg font-bold text-center uppercase tracking-wider">Tính Toán Đơn Hàng Nhanh</h1>
-        </div>
-
-        <div class="p-6 space-y-5">
-            <!-- PHẦN CHỌN KHÁCH HÀNG -->
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">1. Chọn Khách Hàng</label>
-                <select id="select-khach" onchange="updateLogic()" class="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-emerald-500 outline-none">
-                    <option value="">-- Đang tải dữ liệu --</option>
-                </select>
-                <div id="info-nhom" class="mt-2 text-xs font-semibold text-emerald-600 italic"></div>
+    <!-- HEADER -->
+    <div class="bg-blue-700 text-white p-4 sticky top-0 z-50 shadow-md">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <h1 class="font-bold text-lg">POS Mini App</h1>
+            <div class="relative">
+                <i class="fa-solid fa-cart-shopping text-2xl"></i>
+                <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">0</span>
             </div>
-
-            <hr>
-
-            <!-- PHẦN CHỌN SẢN PHẨM -->
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">2. Chọn Sản Phẩm</label>
-                <select id="select-sp" onchange="updateLogic()" class="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-emerald-500 outline-none">
-                    <option value="">-- Đang tải dữ liệu --</option>
-                </select>
-            </div>
-
-            <!-- HIỂN THỊ GIÁ VÀ SỐ LƯỢNG -->
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Đơn Giá</label>
-                    <input type="text" id="hien-gia" readonly class="w-full p-3 bg-gray-100 border-2 border-gray-200 rounded-lg text-red-600 font-bold" value="0">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Số Lượng</label>
-                    <input type="number" id="input-sl" value="1" min="1" oninput="tinhTong()" class="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-emerald-500 outline-none">
-                </div>
-            </div>
-
-            <!-- KẾT QUẢ TÍNH TOÁN -->
-            <div class="bg-gray-900 p-5 rounded-xl">
-                <div class="flex justify-between items-center text-white">
-                    <span class="text-gray-400 font-medium">TỔNG CỘNG:</span>
-                    <span id="hien-tong" class="text-3xl font-black text-yellow-400">0 VNĐ</span>
-                </div>
-            </div>
-
-            <button onclick="window.location.reload()" class="w-full py-3 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition">
-                LÀM MỚI LẠI (XÓA DỮ LIỆU)
-            </button>
         </div>
     </div>
 
+    <div class="max-w-4xl mx-auto p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- BÊN TRÁI: CHỌN KHÁCH & SẢN PHẨM -->
+        <div class="md:col-span-2 space-y-6">
+            <!-- Chọn Khách Hàng -->
+            <div class="bg-white p-4 rounded-xl shadow-sm">
+                <label class="block text-sm font-bold text-gray-700 mb-2">1. Thông tin khách hàng</label>
+                <select id="select-khach" onchange="changeCustomer()" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">-- Chọn khách hàng --</option>
+                </select>
+                <div id="badge-nhom" class="mt-2 hidden">
+                    <span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-1 rounded-md font-bold uppercase">Nhóm: <span id="label-nhom">--</span></span>
+                </div>
+            </div>
+
+            <!-- Danh sách sản phẩm -->
+            <div class="bg-white p-4 rounded-xl shadow-sm">
+                <label class="block text-sm font-bold text-gray-700 mb-4">2. Danh sách sản phẩm</label>
+                <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Sản phẩm sẽ render ở đây -->
+                    <p class="text-gray-400 text-sm italic">Đang tải dữ liệu...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- BÊN PHẢI: GIỎ HÀNG -->
+        <div class="md:col-span-1">
+            <div class="bg-white rounded-xl shadow-lg sticky top-20 overflow-hidden">
+                <div class="bg-gray-800 text-white p-3 text-center font-bold">GIỎ HÀNG</div>
+                
+                <div id="cart-items" class="p-3 max-h-[400px] overflow-y-auto space-y-3">
+                    <p class="text-center text-gray-400 py-10 text-sm">Chưa có sản phẩm nào</p>
+                </div>
+
+                <div class="p-4 border-t border-gray-100 bg-gray-50">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-500">Tổng cộng:</span>
+                        <span id="total-price" class="font-bold text-red-600 text-xl">0đ</span>
+                    </div>
+                    <button onclick="checkout()" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition active:scale-95">
+                        XÁC NHẬN ĐƠN HÀNG
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
     <script>
-        // THAY LINK GOOGLE APPS SCRIPT CỦA BẠN VÀO ĐÂY
-        const URL_API = "https://script.google.com/macros/s/AKfycbw_MdZkKZBg4zI4mUumdHrMYc7xG8izdHvxsZ0uGdK4FoiKxVLeEn4mtp8SRoGaVVkNPQ/exec";
+        const API_URL = "DÁN_LINK_WEB_APP_CỦA_BẠN_VÀO_ĐÂY";
+        
+        let products = [];
+        let customers = [];
+        let cart = [];
+        let currentGroup = "Lẻ"; // Mặc định là lẻ
 
-        let dsKhach = [];
-        let dsSanPham = [];
-
-        // Lấy dữ liệu khi mở trang
         window.onload = async () => {
             try {
-                const res = await fetch(URL_API);
+                const res = await fetch(API_URL);
                 const data = await res.json();
-                
-                dsKhach = data.khach_hang;
-                dsSanPham = data.san_pham;
-
-                hienThiDuLieu();
-            } catch (e) {
-                alert("Lỗi kết nối dữ liệu! Hãy kiểm tra link Apps Script.");
-            }
+                products = data.san_pham;
+                customers = data.khach_hang;
+                renderApp();
+            } catch (e) { alert("Lỗi tải dữ liệu!"); }
         };
 
-        function hienThiDuLieu() {
+        function renderApp() {
+            // Render Khách hàng
             const sKhach = document.getElementById('select-khach');
-            const sSP = document.getElementById('select-sp');
-
-            sKhach.innerHTML = '<option value="">-- Chọn một khách hàng --</option>';
-            dsKhach.forEach(k => {
+            customers.forEach(k => {
                 let opt = document.createElement('option');
-                opt.value = k[2]; // Cột 2: Nhóm Khách Hàng (Sỉ/Lẻ)
-                opt.text = k[1];  // Cột 1: Tên Khách Hàng
+                opt.value = k[2]; // Giả định cột 2 là Nhóm (Sỉ/Lẻ)
+                opt.text = k[1];  // Giả định cột 1 là Tên KH
                 sKhach.appendChild(opt);
             });
 
-            sSP.innerHTML = '<option value="">-- Chọn sản phẩm --</option>';
-            dsSanPham.forEach(p => {
-                let opt = document.createElement('option');
-                opt.text = p[2];      // Cột 2: Tên Sản Phẩm
-                opt.dataset.si = p[6]; // Cột 6: Giá Sỉ
-                opt.dataset.le = p[7]; // Cột 7: Giá Lẻ
-                sSP.appendChild(opt);
+            // Render Sản phẩm
+            const pList = document.getElementById('product-list');
+            pList.innerHTML = '';
+            products.forEach((p, index) => {
+                pList.innerHTML += `
+                    <div class="border border-gray-100 p-3 rounded-lg hover:border-blue-300 transition shadow-sm">
+                        <div class="font-bold text-gray-800">${p[2]}</div>
+                        <div class="text-[10px] text-gray-400 mb-2">Mã: ${p[0]}</div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-blue-600 font-bold">${parseInt(p[7]).toLocaleString()}đ</span>
+                            <button onclick="addToCart(${index})" class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-blue-700 shadow-lg">
+                                <i class="fa-solid fa-plus text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
             });
         }
 
-        function updateLogic() {
-            const nhomKhach = document.getElementById('select-khach').value;
-            const itemSP = document.getElementById('select-sp').selectedOptions[0];
-            const hienNhom = document.getElementById('info-nhom');
+        function changeCustomer() {
+            const select = document.getElementById('select-khach');
+            currentGroup = select.value || "Lẻ";
             
-            if (!nhomKhach || !itemSP.dataset.si) return;
-
-            // Hiển thị nhóm khách cho người dùng thấy
-            hienNhom.innerText = "Áp dụng giá cho khách nhóm: " + nhomKhach;
-
-            // Quyết định lấy cột giá nào
-            let gia = (nhomKhach === "Sỉ") ? itemSP.dataset.si : itemSP.dataset.le;
+            document.getElementById('badge-nhom').classList.toggle('hidden', !select.value);
+            document.getElementById('label-nhom').innerText = currentGroup;
             
-            document.getElementById('hien-gia').value = gia;
-            tinhTong();
+            updateCartUI(); // Cập nhật lại giá trong giỏ hàng khi đổi nhóm khách
         }
 
-        function tinhTong() {
-            const gia = parseInt(document.getElementById('hien-gia').value) || 0;
-            const sl = parseInt(document.getElementById('input-sl').value) || 0;
-            const tong = gia * sl;
-            document.getElementById('hien-tong').innerText = tong.toLocaleString('vi-VN') + " VNĐ";
+        function addToCart(index) {
+            const p = products[index];
+            const found = cart.find(item => item.id === p[0]);
+            
+            if (found) {
+                found.qty++;
+            } else {
+                cart.push({ id: p[0], name: p[2], giaSi: p[6], giaLe: p[7], qty: 1 });
+            }
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const cartContainer = document.getElementById('cart-items');
+            const cartCount = document.getElementById('cart-count');
+            const totalPrice = document.getElementById('total-price');
+            
+            if (cart.length === 0) {
+                cartContainer.innerHTML = '<p class="text-center text-gray-400 py-10 text-sm">Chưa có sản phẩm nào</p>';
+                totalPrice.innerText = '0đ';
+                cartCount.innerText = '0';
+                return;
+            }
+
+            let total = 0;
+            cartContainer.innerHTML = '';
+            
+            cart.forEach((item, i) => {
+                // Tự động chọn giá theo nhóm khách
+                const giaApDung = (currentGroup === "Sỉ") ? item.giaSi : item.giaLe;
+                const thanhTien = giaApDung * item.qty;
+                total += thanhTien;
+
+                cartContainer.innerHTML += `
+                    <div class="flex justify-between items-start border-b border-gray-50 pb-2">
+                        <div class="flex-1">
+                            <div class="text-xs font-bold text-gray-700">${item.name}</div>
+                            <div class="text-[10px] text-gray-400">${parseInt(giaApDung).toLocaleString()}đ x ${item.qty}</div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <div class="text-xs font-bold text-blue-600">${thanhTien.toLocaleString()}đ</div>
+                            <button onclick="removeFromCart(${i})" class="text-red-400 text-[10px] mt-1"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            totalPrice.innerText = total.toLocaleString() + 'đ';
+            cartCount.innerText = cart.reduce((sum, item) => sum + item.qty, 0);
+        }
+
+        function removeFromCart(i) {
+            cart.splice(i, 1);
+            updateCartUI();
+        }
+
+        async function checkout() {
+            if (cart.length === 0) return alert("Giỏ hàng trống!");
+            alert("Đã ghi nhận đơn hàng thành công!");
+            console.log("Dữ liệu gửi đi:", { khach: document.getElementById('select-khach').options[document.getElementById('select-khach').selectedIndex].text, chiTiet: cart });
+            cart = [];
+            updateCartUI();
         }
     </script>
 </body>
