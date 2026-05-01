@@ -1,192 +1,219 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tạp Hoá Kim Ngọc - POS</title>
-    <script src="https://tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cloudflare.com">
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        #bill-print { display: none; }
-        @media print {
-            body * { visibility: hidden; }
-            #bill-print, #bill-print * { visibility: visible; }
-            #bill-print { display: block !important; position: absolute; left: 0; top: 0; width: 80mm; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Tạp Hoá Kim Ngọc</title>
+  <script src="https://tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cloudflare.com">
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background-color: #f1f5f9; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .product-card img { width: 70px; height: 70px; object-fit: cover; border-radius: 12px; }
+    @media print {
+        #bill-print { display: block !important; }
+        body * { visibility: hidden; }
+        #bill-print, #bill-print * { visibility: visible; }
+        #bill-print { position: absolute; left: 0; top: 0; width: 80mm; }
+    }
+  </style>
 </head>
-<body class="pb-24">
+<body class="text-gray-800 pb-24">
 
-    <!-- LOADING OVERLAY -->
-    <div id="loading" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center">
-        <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 font-bold text-blue-600">Đang kết nối dữ liệu...</p>
-    </div>
+  <!-- HEADER -->
+  <header class="bg-white border-b p-4 sticky top-0 z-50 shadow-sm flex justify-between items-center">
+    <h1 class="font-black text-xl text-green-600 italic tracking-tighter">KIM NGỌC POS</h1>
+    <button onclick="location.reload()" class="text-gray-400 p-2"><i class="fa fa-sync-alt"></i></button>
+  </header>
 
-    <!-- MÀN HÌNH BÁN HÀNG -->
-    <div id="tab-pos" class="tab-content active">
-        <header class="bg-white p-4 border-b sticky top-0 z-10 flex justify-between items-center shadow-sm">
-            <h1 class="font-black text-blue-600 text-lg">KIM NGỌC POS</h1>
-            <button onclick="location.reload()" class="text-gray-400"><i class="fa fa-sync"></i></button>
-        </header>
-
-        <main class="p-4 space-y-4">
-            <!-- Chọn khách & Loại giá -->
-            <div class="bg-white p-4 rounded-2xl shadow-sm border space-y-3">
-                <div class="flex items-center gap-3">
-                    <i class="fa fa-user-circle text-blue-500 text-xl"></i>
-                    <select id="cSelect" class="flex-1 outline-none font-bold text-gray-700 bg-transparent" onchange="updateCartUI()">
-                        <option value="" data-group="Khách Lẻ">Khách Lẻ (Mặc định)</option>
-                    </select>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="setPriceType('le')" id="btn-le" class="flex-1 py-2 rounded-lg font-bold border-2 border-blue-600 bg-blue-600 text-white">GIÁ LẺ</button>
-                    <button onclick="setPriceType('si')" id="btn-si" class="flex-1 py-2 rounded-lg font-bold border-2 border-blue-600 text-blue-600">GIÁ SỈ</button>
-                </div>
+  <main class="p-3 space-y-3">
+    
+    <!-- PHẦN 1: GIỎ HÀNG (NẰM TRÊN) -->
+    <section class="bg-white rounded-2xl shadow-sm border border-green-100 overflow-hidden">
+        <div class="bg-green-600 p-3 flex justify-between items-center text-white">
+            <span class="font-bold flex items-center gap-2"><i class="fa fa-shopping-cart"></i> ĐƠN HÀNG</span>
+            <div class="flex gap-2">
+                <button onclick="setPriceType('le')" id="btn-le" class="text-[10px] font-extrabold px-3 py-1 rounded-full border border-white bg-white text-green-600 transition">GIÁ LẺ</button>
+                <button onclick="setPriceType('si')" id="btn-si" class="text-[10px] font-extrabold px-3 py-1 rounded-full border border-white transition">GIÁ SỈ</button>
             </div>
-
-            <!-- Giỏ hàng -->
-            <div class="bg-white rounded-2xl p-4 shadow-sm border min-h-[40vh] flex flex-col">
-                <div class="flex justify-between items-center border-b pb-3 mb-4">
-                    <span class="font-bold text-gray-600">Đơn hàng</span>
-                    <button onclick="openModal('modal-p')" class="bg-blue-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg">+ THÊM HÀNG</button>
-                </div>
-                <div id="cartItems" class="space-y-4 flex-1"></div>
-            </div>
-
-            <!-- Nút thanh toán -->
-            <div class="bg-white p-5 rounded-2xl shadow-lg border-t-4 border-blue-600">
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-gray-500 font-medium">Tổng tiền (<span id="totalQty">0</span> món)</span>
-                    <span id="totalVal" class="text-2xl font-black text-red-600">0đ</span>
-                </div>
-                <button onclick="saveAndPrint()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-lg shadow-xl active:scale-95 transition">THANH TOÁN & IN</button>
-            </div>
-        </main>
-    </div>
-
-    <!-- MODAL CHỌN SẢN PHẨM -->
-    <div id="modal-p" class="fixed inset-0 bg-black/60 z-50 hidden flex items-end">
-        <div class="bg-white w-full h-[85vh] rounded-t-[2rem] p-6 flex flex-col shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-black text-lg uppercase">Danh sách hàng hóa</h3>
-                <button onclick="closeModal('modal-p')" class="text-2xl text-gray-400">&times;</button>
-            </div>
-            <input type="text" id="pSearch" placeholder="Tìm tên sản phẩm..." class="w-full p-4 bg-gray-100 rounded-2xl mb-4 outline-none border focus:border-blue-400" oninput="renderPOSProducts()">
-            <div id="pos-p-list" class="space-y-3 overflow-y-auto pb-10 flex-1"></div>
         </div>
-    </div>
-
-    <script>
-        // THAY LINK SCRIPT ĐÃ DEPLOY CỦA BẠN VÀO ĐÂY
-        const API_URL = "https://script.google.com/macros/s/AKfycbwGLgt_mKOW7r73TRONd3Zypo9fP9fLMWK3wLCg0PYwvHiYNSXXJlmdnPoR9VZrSx603Q/exec";
         
-        let db = { products: [], customers: [] };
-        let cart = [];
-        let priceType = 'le'; // 'le' hoặc 'si'
+        <div id="cartItems" class="p-3 space-y-3 max-h-[300px] overflow-y-auto hide-scrollbar min-h-[100px]">
+            <div class="text-center py-8 text-gray-400 text-sm italic">Chưa có sản phẩm nào...</div>
+        </div>
 
-        async function init() {
-            try {
-                // Thêm tham số ngẫu nhiên để tránh trình duyệt cache dữ liệu cũ
-                const response = await fetch(API_URL + "?t=" + new Date().getTime());
-                if (!response.ok) throw new Error("Network response was not ok");
-                
-                db = await response.json();
-                
-                // Đổ dữ liệu khách hàng
-                const cSelect = document.getElementById('cSelect');
-                db.customers.forEach(c => {
-                    cSelect.innerHTML += `<option value="${c.id}" data-group="${c.group}">${c.name} (${c.group})</option>`;
-                });
+        <div class="p-3 bg-gray-50 border-t flex justify-between items-center">
+            <span class="text-sm font-bold text-gray-500">Tổng cộng (<span id="totalQty">0</span> món)</span>
+            <span id="totalVal" class="text-xl font-black text-red-600">0đ</span>
+        </div>
+    </section>
 
-                document.getElementById('loading').style.display = 'none';
-            } catch (error) {
-                console.error("Lỗi kết nối:", error);
-                alert("KHÔNG THỂ KẾT NỐI DỮ LIỆU!\n1. Hãy chắc chắn bạn đã Deploy Apps Script ở chế độ 'Anyone'.\n2. Kiểm tra lại URL API.");
-            }
+    <!-- THANH TÌM KIẾM -->
+    <section class="sticky top-[65px] z-40">
+        <div class="relative">
+            <i class="fa fa-search absolute left-4 top-3.5 text-gray-400"></i>
+            <input type="text" id="pSearch" placeholder="Tìm tên sản phẩm..." 
+                class="w-full pl-11 pr-4 py-3 bg-white border-2 border-green-500 rounded-2xl outline-none shadow-md"
+                oninput="renderProducts()">
+        </div>
+    </section>
+
+    <!-- PHẦN 2: DANH SÁCH SẢN PHẨM (NẰM DƯỚI) -->
+    <section id="productList" class="space-y-3">
+        <!-- Load dữ liệu từ API -->
+        <div class="text-center py-10 text-gray-400 italic">Đang tải danh sách hàng...</div>
+    </section>
+
+  </main>
+
+  <!-- THANH THANH TOÁN CỐ ĐỊNH -->
+  <footer class="fixed bottom-0 left-0 right-0 bg-white border-t p-3 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+    <button onclick="saveAndPrint()" class="w-full bg-green-600 text-white py-4 rounded-xl font-black text-lg shadow-lg active:scale-95 transition flex justify-center items-center gap-3">
+        <i class="fa fa-print text-xl"></i> THANH TOÁN & XUẤT ĐƠN
+    </button>
+  </footer>
+
+  <!-- BILL IN ẨN -->
+  <div id="bill-print" class="hidden font-mono text-[10pt] p-4">
+    <center>
+        <strong style="font-size: 14pt;">TẠP HOÁ KIM NGỌC</strong><br>
+        Đ/c: Ấp Long An 1, Xã Phước Vĩnh Tây, Cần Giuộc<br>
+        SĐT: 0963.839.220<br>
+        --------------------------------
+    </center>
+    <div id="bill-info" class="my-3"></div>
+    <table class="w-full border-t border-b border-black border-dashed my-3">
+        <thead><tr class="text-left"><th>Tên hàng</th><th class="text-right">SL</th></tr></thead>
+        <tbody id="bill-items"></tbody>
+    </table>
+    <div id="bill-total" class="text-right font-bold text-[12pt]"></div>
+    <center class="mt-5">Hẹn gặp lại quý khách!</center>
+  </div>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbwGLgt_mKOW7r73TRONd3Zypo9fP9fLMWK3wLCg0PYwvHiYNSXXJlmdnPoR9VZrSx603Q/exec";
+    let db = { products: [], customers: [] };
+    let cart = [];
+    let priceType = 'le';
+
+    async function init() {
+        try {
+            const res = await fetch(API_URL);
+            const data = await res.json();
+            db.products = data.products;
+            renderProducts();
+        } catch (e) {
+            document.getElementById('productList').innerHTML = '<div class="text-center text-red-500">Lỗi kết nối dữ liệu!</div>';
+        }
+    }
+
+    function setPriceType(type) {
+        priceType = type;
+        const btnLe = document.getElementById('btn-le');
+        const btnSi = document.getElementById('btn-si');
+        
+        if(type === 'le') {
+            btnLe.className = "text-[10px] font-extrabold px-3 py-1 rounded-full border border-white bg-white text-green-600 transition";
+            btnSi.className = "text-[10px] font-extrabold px-3 py-1 rounded-full border border-white transition text-white";
+        } else {
+            btnSi.className = "text-[10px] font-extrabold px-3 py-1 rounded-full border border-white bg-white text-green-600 transition";
+            btnLe.className = "text-[10px] font-extrabold px-3 py-1 rounded-full border border-white transition text-white";
+        }
+        renderProducts();
+        updateCartUI();
+    }
+
+    function renderProducts() {
+        const list = document.getElementById('productList');
+        const kw = document.getElementById('pSearch').value.toLowerCase();
+        list.innerHTML = "";
+        
+        db.products.filter(p => p.name.toLowerCase().includes(kw)).forEach(p => {
+            const price = priceType === 'si' ? p.si : p.le;
+            list.innerHTML += `
+                <div class="bg-white p-3 rounded-2xl flex justify-between items-center shadow-sm border border-gray-100 active:bg-green-50 transition" onclick="addToCart('${p.id}')">
+                    <div class="flex-1 pr-3">
+                        <div class="font-bold text-sm text-gray-700 leading-tight">${p.name}</div>
+                        <div class="text-[10px] text-gray-400 mt-1 uppercase">Mã: ${p.id}</div>
+                        <div class="text-green-600 font-black text-base mt-1">${Number(price).toLocaleString()}đ</div>
+                    </div>
+                    <img src="${p.img || 'https://placeholder.com'}" class="w-16 h-16 object-cover rounded-xl border">
+                </div>`;
+        });
+    }
+
+    function addToCart(id) {
+        const p = db.products.find(x => x.id === id);
+        const exist = cart.find(i => i.id === id);
+        if(exist) exist.qty++; else cart.push({...p, qty: 1});
+        updateCartUI();
+    }
+
+    function updateCartUI() {
+        const container = document.getElementById('cartItems');
+        let total = 0, count = 0;
+
+        if(cart.length === 0) {
+            container.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm italic">Chưa có sản phẩm nào...</div>';
+            document.getElementById('totalVal').innerText = "0đ";
+            document.getElementById('totalQty').innerText = "0";
+            return;
         }
 
-        function setPriceType(type) {
-            priceType = type;
-            document.getElementById('btn-le').className = type === 'le' ? 'flex-1 py-2 rounded-lg font-bold border-2 border-blue-600 bg-blue-600 text-white' : 'flex-1 py-2 rounded-lg font-bold border-2 border-blue-600 text-blue-600';
-            document.getElementById('btn-si').className = type === 'si' ? 'flex-1 py-2 rounded-lg font-bold border-2 border-blue-600 bg-blue-600 text-white' : 'flex-1 py-2 rounded-lg font-bold border-2 border-blue-600 text-blue-600';
-            updateCartUI();
-        }
-
-        function renderPOSProducts() {
-            const list = document.getElementById('pos-p-list');
-            const kw = document.getElementById('pSearch').value.toLowerCase();
-            list.innerHTML = "";
-            
-            db.products.filter(p => p.name.toLowerCase().includes(kw)).forEach(p => {
-                const price = priceType === 'si' ? p.si : p.le;
-                list.innerHTML += `
-                    <div class="flex items-center justify-between p-3 border rounded-2xl bg-white shadow-sm active:bg-blue-50" onclick="addToCart('${p.id}')">
-                        <div class="flex-1 pr-3">
-                            <div class="font-bold text-sm text-gray-800">${p.name}</div>
-                            <div class="text-blue-600 font-black mt-1">${Number(price).toLocaleString()}đ</div>
-                        </div>
-                        <img src="${p.img || 'https://placeholder.com'}" class="w-14 h-14 object-cover rounded-xl border">
-                    </div>`;
-            });
-        }
-
-        function addToCart(id) {
-            const p = db.products.find(x => x.id === id);
-            const exist = cart.find(i => i.id === id);
-            if(exist) exist.qty++; else cart.push({...p, qty: 1});
-            updateCartUI();
-        }
-
-        function updateCartUI() {
-            const container = document.getElementById('cartItems');
-            let total = 0, count = 0;
-
-            if(cart.length === 0) {
-                container.innerHTML = '<p class="text-center py-10 text-gray-400 italic">Giỏ hàng trống</p>';
-                document.getElementById('totalVal').innerText = "0đ";
-                document.getElementById('totalQty').innerText = "0";
-                return;
-            }
-
-            container.innerHTML = cart.map((i, idx) => {
-                const price = priceType === 'si' ? i.si : i.le;
-                total += price * i.qty;
-                count += i.qty;
-                return `
-                <div class="flex justify-between items-center bg-gray-50 p-2 rounded-xl border">
-                    <div class="flex items-center gap-3">
+        container.innerHTML = cart.map((i, idx) => {
+            const price = priceType === 'si' ? i.si : i.le;
+            total += price * i.qty;
+            count += i.qty;
+            return `
+                <div class="flex justify-between items-center bg-gray-50 p-2 rounded-xl border border-gray-200">
+                    <div class="flex items-center gap-2">
                         <img src="${i.img || 'https://placeholder.com'}" class="w-10 h-10 object-cover rounded-lg border">
                         <div>
-                            <div class="font-bold text-xs">${i.name}</div>
-                            <div class="text-blue-600 text-[10px] font-black">${price.toLocaleString()}đ</div>
+                            <div class="font-bold text-xs truncate w-32">${i.name}</div>
+                            <div class="text-green-600 text-[10px] font-black">${Number(price).toLocaleString()}đ</div>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button onclick="changeQty(${idx},-1)" class="w-7 h-7 bg-white rounded-full shadow text-red-500 font-bold">-</button>
-                        <span class="text-xs font-black">${i.qty}</span>
-                        <button onclick="changeQty(${idx},1)" class="w-7 h-7 bg-blue-600 rounded-full shadow text-white font-bold">+</button>
+                        <button onclick="event.stopPropagation(); changeQty(${idx},-1)" class="w-7 h-7 bg-white rounded-full shadow text-red-500 font-bold border">-</button>
+                        <span class="text-xs font-black w-4 text-center">${i.qty}</span>
+                        <button onclick="event.stopPropagation(); changeQty(${idx},1)" class="w-7 h-7 bg-green-600 rounded-full shadow text-white font-bold border border-green-600">+</button>
                     </div>
                 </div>`;
-            }).join('');
-            document.getElementById('totalVal').innerText = total.toLocaleString() + "đ";
-            document.getElementById('totalQty').innerText = count;
-        }
+        }).join('');
+        
+        document.getElementById('totalVal').innerText = total.toLocaleString() + "đ";
+        document.getElementById('totalQty').innerText = count;
+    }
 
-        function changeQty(idx, d) {
-            cart[idx].qty += d;
-            if(cart[idx].qty <= 0) cart.splice(idx, 1);
-            updateCartUI();
-        }
+    function changeQty(idx, d) {
+        cart[idx].qty += d;
+        if(cart[idx].qty <= 0) cart.splice(idx, 1);
+        updateCartUI();
+    }
 
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); renderPOSProducts(); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    async function saveAndPrint() {
+        if(cart.length === 0) return alert("Giỏ hàng đang trống!");
 
-        init();
-    </script>
+        // In hóa đơn
+        document.getElementById('bill-info').innerHTML = `Ngày: ${new Date().toLocaleString()}<br>Loại giá: ${priceType === 'si' ? 'GIÁ SỈ' : 'GIÁ LẺ'}`;
+        document.getElementById('bill-items').innerHTML = cart.map(i => `<tr><td>${i.name}</td><td class="text-right">x${i.qty}</td></tr>`).join('');
+        document.getElementById('bill-total').innerText = "TỔNG: " + document.getElementById('totalVal').innerText;
+        window.print();
+
+        // Ghi dữ liệu lên Google Sheets
+        const data = { 
+            action: "saveOrder", 
+            customerName: "Khách lẻ - " + (priceType === 'si' ? 'Sỉ' : 'Lẻ'), 
+            total: document.getElementById('totalVal').innerText, 
+            items: cart 
+        };
+        
+        await fetch(API_URL, { method: "POST", body: JSON.stringify(data) });
+        alert("Đơn hàng đã được lưu!");
+        cart = []; updateCartUI();
+    }
+
+    init();
+  </script>
 </body>
 </html>
