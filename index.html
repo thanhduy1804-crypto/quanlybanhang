@@ -1,219 +1,238 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Tạp Hoá Kim Ngọc</title>
-  <script src="https://tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cloudflare.com">
-  <style>
-    body { font-family: 'Segoe UI', sans-serif; background-color: #f1f5f9; }
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .product-card img { width: 70px; height: 70px; object-fit: cover; border-radius: 12px; }
-    @media print {
-        #bill-print { display: block !important; }
-        body * { visibility: hidden; }
-        #bill-print, #bill-print * { visibility: visible; }
-        #bill-print { position: absolute; left: 0; top: 0; width: 80mm; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Tạp Hoá Kim Ngọc - POS</title>
+    <script src="https://tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cloudflare.com">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f1f5f9; -webkit-tap-highlight-color: transparent; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        #bill-print { display: none; }
+        @media print {
+            body * { visibility: hidden; }
+            #bill-print, #bill-print * { visibility: visible; }
+            #bill-print { position: absolute; left: 0; top: 0; width: 80mm; display: block !important; }
+        }
+    </style>
 </head>
-<body class="text-gray-800 pb-24">
+<body class="text-gray-800 pb-32">
 
-  <!-- HEADER -->
-  <header class="bg-white border-b p-4 sticky top-0 z-50 shadow-sm flex justify-between items-center">
-    <h1 class="font-black text-xl text-green-600 italic tracking-tighter">KIM NGỌC POS</h1>
-    <button onclick="location.reload()" class="text-gray-400 p-2"><i class="fa fa-sync-alt"></i></button>
-  </header>
+    <!-- HEADER -->
+    <header class="bg-white border-b p-4 sticky top-0 z-50 shadow-sm flex justify-between items-center">
+        <h1 class="font-black text-xl text-green-600 italic tracking-tighter">KIM NGỌC POS</h1>
+        <button onclick="location.reload()" class="text-gray-400 p-2"><i class="fa fa-sync-alt"></i></button>
+    </header>
 
-  <main class="p-3 space-y-3">
-    
-    <!-- PHẦN 1: GIỎ HÀNG (NẰM TRÊN) -->
-    <section class="bg-white rounded-2xl shadow-sm border border-green-100 overflow-hidden">
-        <div class="bg-green-600 p-3 flex justify-between items-center text-white">
-            <span class="font-bold flex items-center gap-2"><i class="fa fa-shopping-cart"></i> ĐƠN HÀNG</span>
-            <div class="flex gap-2">
-                <button onclick="setPriceType('le')" id="btn-le" class="text-[10px] font-extrabold px-3 py-1 rounded-full border border-white bg-white text-green-600 transition">GIÁ LẺ</button>
-                <button onclick="setPriceType('si')" id="btn-si" class="text-[10px] font-extrabold px-3 py-1 rounded-full border border-white transition">GIÁ SỈ</button>
+    <main class="p-3 space-y-4">
+        
+        <!-- PHẦN 1: GIỎ HÀNG (NẰM TRÊN) -->
+        <section class="bg-white rounded-2xl shadow-md border border-green-100 overflow-hidden transition-all">
+            <div class="bg-green-600 p-3 flex justify-between items-center text-white">
+                <span class="font-bold flex items-center gap-2"><i class="fa fa-shopping-basket"></i> ĐƠN HÀNG</span>
+                <div id="priceStatus" class="text-[10px] bg-green-700 px-2 py-1 rounded-full font-bold uppercase">Giá: Lẻ</div>
             </div>
-        </div>
-        
-        <div id="cartItems" class="p-3 space-y-3 max-h-[300px] overflow-y-auto hide-scrollbar min-h-[100px]">
-            <div class="text-center py-8 text-gray-400 text-sm italic">Chưa có sản phẩm nào...</div>
-        </div>
+            
+            <!-- Chọn Khách hàng (Đồng bộ với Sheet Khach_Hang) -->
+            <div class="p-3 border-b bg-green-50 flex items-center gap-2">
+                <i class="fa fa-user-circle text-green-600 text-lg"></i>
+                <select id="cSelect" class="flex-1 bg-transparent outline-none font-bold text-sm text-green-800" onchange="changeCustomer()">
+                    <option value="" data-group="Khách Lẻ">-- Chọn khách hàng --</option>
+                </select>
+            </div>
 
-        <div class="p-3 bg-gray-50 border-t flex justify-between items-center">
-            <span class="text-sm font-bold text-gray-500">Tổng cộng (<span id="totalQty">0</span> món)</span>
-            <span id="totalVal" class="text-xl font-black text-red-600">0đ</span>
-        </div>
-    </section>
+            <!-- Danh sách món trong giỏ -->
+            <div id="cartItems" class="p-3 space-y-3 max-h-[300px] overflow-y-auto hide-scrollbar min-h-[80px]">
+                <div class="text-center py-6 text-gray-400 text-sm italic">Giỏ hàng đang trống...</div>
+            </div>
 
-    <!-- THANH TÌM KIẾM -->
-    <section class="sticky top-[65px] z-40">
-        <div class="relative">
-            <i class="fa fa-search absolute left-4 top-3.5 text-gray-400"></i>
-            <input type="text" id="pSearch" placeholder="Tìm tên sản phẩm..." 
-                class="w-full pl-11 pr-4 py-3 bg-white border-2 border-green-500 rounded-2xl outline-none shadow-md"
-                oninput="renderProducts()">
-        </div>
-    </section>
+            <!-- Tổng cộng -->
+            <div class="p-3 bg-gray-50 border-t flex justify-between items-center">
+                <div class="text-xs font-bold text-gray-400 uppercase">Tổng <span id="totalQty">0</span> món</div>
+                <span id="totalVal" class="text-2xl font-black text-red-600">0đ</span>
+            </div>
+        </section>
 
-    <!-- PHẦN 2: DANH SÁCH SẢN PHẨM (NẰM DƯỚI) -->
-    <section id="productList" class="space-y-3">
-        <!-- Load dữ liệu từ API -->
-        <div class="text-center py-10 text-gray-400 italic">Đang tải danh sách hàng...</div>
-    </section>
+        <!-- THANH TÌM KIẾM -->
+        <section class="sticky top-[68px] z-40">
+            <div class="relative group">
+                <i class="fa fa-search absolute left-4 top-3.5 text-gray-400 group-focus-within:text-green-500"></i>
+                <input type="text" id="pSearch" placeholder="Tìm tên sản phẩm..." 
+                    class="w-full pl-11 pr-4 py-3 bg-white border-2 border-green-200 focus:border-green-500 rounded-2xl outline-none shadow-sm transition-all"
+                    oninput="renderProducts()">
+            </div>
+        </section>
 
-  </main>
+        <!-- PHẦN 2: DANH SÁCH SẢN PHẨM -->
+        <section id="productList" class="space-y-3">
+            <div class="text-center py-10"><i class="fa fa-spinner animate-spin text-green-600 text-2xl"></i></div>
+        </section>
 
-  <!-- THANH THANH TOÁN CỐ ĐỊNH -->
-  <footer class="fixed bottom-0 left-0 right-0 bg-white border-t p-3 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
-    <button onclick="saveAndPrint()" class="w-full bg-green-600 text-white py-4 rounded-xl font-black text-lg shadow-lg active:scale-95 transition flex justify-center items-center gap-3">
-        <i class="fa fa-print text-xl"></i> THANH TOÁN & XUẤT ĐƠN
-    </button>
-  </footer>
+    </main>
 
-  <!-- BILL IN ẨN -->
-  <div id="bill-print" class="hidden font-mono text-[10pt] p-4">
-    <center>
-        <strong style="font-size: 14pt;">TẠP HOÁ KIM NGỌC</strong><br>
-        Đ/c: Ấp Long An 1, Xã Phước Vĩnh Tây, Cần Giuộc<br>
-        SĐT: 0963.839.220<br>
-        --------------------------------
-    </center>
-    <div id="bill-info" class="my-3"></div>
-    <table class="w-full border-t border-b border-black border-dashed my-3">
-        <thead><tr class="text-left"><th>Tên hàng</th><th class="text-right">SL</th></tr></thead>
-        <tbody id="bill-items"></tbody>
-    </table>
-    <div id="bill-total" class="text-right font-bold text-[12pt]"></div>
-    <center class="mt-5">Hẹn gặp lại quý khách!</center>
-  </div>
+    <!-- THANH THANH TOÁN -->
+    <footer class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t p-4 z-50">
+        <button onclick="saveAndPrint()" class="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-bold text-lg shadow-xl active:scale-95 transition-all flex justify-center items-center gap-3">
+            <i class="fa fa-print text-xl"></i> THANH TOÁN & IN BILL
+        </button>
+    </footer>
 
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwGLgt_mKOW7r73TRONd3Zypo9fP9fLMWK3wLCg0PYwvHiYNSXXJlmdnPoR9VZrSx603Q/exec";
-    let db = { products: [], customers: [] };
-    let cart = [];
-    let priceType = 'le';
+    <!-- BILL IN ẨN -->
+    <div id="bill-print" class="font-mono text-[10pt] p-4 leading-tight">
+        <center>
+            <strong style="font-size: 16pt;">TẠP HOÁ KIM NGỌC</strong><br>
+            Cần Giuộc, Long An - 0963.839.220<br>
+            --------------------------------
+        </center>
+        <div id="bill-info" class="my-4"></div>
+        <table class="w-full border-t border-b border-black border-dashed my-4">
+            <thead><tr class="text-left"><th class="py-1">Tên hàng</th><th class="text-right py-1">SL</th></tr></thead>
+            <tbody id="bill-items"></tbody>
+        </table>
+        <div id="bill-total" class="text-right font-black text-[14pt]"></div>
+        <center class="mt-8 italic text-[8pt]">Cảm ơn & Hẹn gặp lại!</center>
+    </div>
 
-    async function init() {
-        try {
-            const res = await fetch(API_URL);
-            const data = await res.json();
-            db.products = data.products;
-            renderProducts();
-        } catch (e) {
-            document.getElementById('productList').innerHTML = '<div class="text-center text-red-500">Lỗi kết nối dữ liệu!</div>';
-        }
-    }
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbwGLgt_mKOW7r73TRONd3Zypo9fP9fLMWK3wLCg0PYwvHiYNSXXJlmdnPoR9VZrSx603Q/exec
+";
+        let db = { products: [], customers: [] };
+        let cart = [];
+        let currentGroup = "Khách Lẻ";
 
-    function setPriceType(type) {
-        priceType = type;
-        const btnLe = document.getElementById('btn-le');
-        const btnSi = document.getElementById('btn-si');
-        
-        if(type === 'le') {
-            btnLe.className = "text-[10px] font-extrabold px-3 py-1 rounded-full border border-white bg-white text-green-600 transition";
-            btnSi.className = "text-[10px] font-extrabold px-3 py-1 rounded-full border border-white transition text-white";
-        } else {
-            btnSi.className = "text-[10px] font-extrabold px-3 py-1 rounded-full border border-white bg-white text-green-600 transition";
-            btnLe.className = "text-[10px] font-extrabold px-3 py-1 rounded-full border border-white transition text-white";
-        }
-        renderProducts();
-        updateCartUI();
-    }
+        async function init() {
+            try {
+                const res = await fetch(API_URL);
+                db = await res.json();
+                
+                // Đổ dữ liệu khách hàng
+                const cSelect = document.getElementById('cSelect');
+                db.customers.forEach(c => {
+                    cSelect.innerHTML += `<option value="${c.id}" data-group="${c.group}" data-name="${c.name}">${c.name} (${c.group})</option>`;
+                });
 
-    function renderProducts() {
-        const list = document.getElementById('productList');
-        const kw = document.getElementById('pSearch').value.toLowerCase();
-        list.innerHTML = "";
-        
-        db.products.filter(p => p.name.toLowerCase().includes(kw)).forEach(p => {
-            const price = priceType === 'si' ? p.si : p.le;
-            list.innerHTML += `
-                <div class="bg-white p-3 rounded-2xl flex justify-between items-center shadow-sm border border-gray-100 active:bg-green-50 transition" onclick="addToCart('${p.id}')">
-                    <div class="flex-1 pr-3">
-                        <div class="font-bold text-sm text-gray-700 leading-tight">${p.name}</div>
-                        <div class="text-[10px] text-gray-400 mt-1 uppercase">Mã: ${p.id}</div>
-                        <div class="text-green-600 font-black text-base mt-1">${Number(price).toLocaleString()}đ</div>
-                    </div>
-                    <img src="${p.img || 'https://placeholder.com'}" class="w-16 h-16 object-cover rounded-xl border">
-                </div>`;
-        });
-    }
-
-    function addToCart(id) {
-        const p = db.products.find(x => x.id === id);
-        const exist = cart.find(i => i.id === id);
-        if(exist) exist.qty++; else cart.push({...p, qty: 1});
-        updateCartUI();
-    }
-
-    function updateCartUI() {
-        const container = document.getElementById('cartItems');
-        let total = 0, count = 0;
-
-        if(cart.length === 0) {
-            container.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm italic">Chưa có sản phẩm nào...</div>';
-            document.getElementById('totalVal').innerText = "0đ";
-            document.getElementById('totalQty').innerText = "0";
-            return;
+                renderProducts();
+            } catch (e) {
+                document.getElementById('productList').innerHTML = '<div class="text-center text-red-500 p-10 font-bold">LỖI KẾT NỐI API!</div>';
+            }
         }
 
-        container.innerHTML = cart.map((i, idx) => {
-            const price = priceType === 'si' ? i.si : i.le;
-            total += price * i.qty;
-            count += i.qty;
-            return `
-                <div class="flex justify-between items-center bg-gray-50 p-2 rounded-xl border border-gray-200">
-                    <div class="flex items-center gap-2">
-                        <img src="${i.img || 'https://placeholder.com'}" class="w-10 h-10 object-cover rounded-lg border">
-                        <div>
-                            <div class="font-bold text-xs truncate w-32">${i.name}</div>
-                            <div class="text-green-600 text-[10px] font-black">${Number(price).toLocaleString()}đ</div>
+        function changeCustomer() {
+            const sel = document.getElementById('cSelect').selectedOptions[0];
+            currentGroup = sel.dataset.group || "Khách Lẻ";
+            document.getElementById('priceStatus').innerText = "Giá: " + (currentGroup === "Khách Sỉ" ? "Sỉ" : "Lẻ");
+            updateCartUI(); // Cập nhật lại giá trong giỏ theo nhóm khách mới
+        }
+
+        function renderProducts() {
+            const list = document.getElementById('productList');
+            const kw = document.getElementById('pSearch').value.toLowerCase();
+            list.innerHTML = "";
+            
+            db.products.filter(p => p.name.toLowerCase().includes(kw)).forEach(p => {
+                // Hiển thị giá lẻ ở ngoài danh sách cho dễ nhìn
+                list.innerHTML += `
+                    <div class="bg-white p-3 rounded-2xl flex justify-between items-center shadow-sm border active:bg-green-50 transition-colors" onclick="addToCart('${p.id}')">
+                        <div class="flex-1 pr-3">
+                            <div class="font-bold text-sm text-gray-700 leading-tight mb-1">${p.name}</div>
+                            <div class="text-[10px] text-gray-400 uppercase tracking-wider">Mã: ${p.id} | ${p.unit || ''}</div>
+                            <div class="text-green-600 font-black text-lg mt-1">${Number(p.le).toLocaleString()}đ</div>
                         </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="event.stopPropagation(); changeQty(${idx},-1)" class="w-7 h-7 bg-white rounded-full shadow text-red-500 font-bold border">-</button>
-                        <span class="text-xs font-black w-4 text-center">${i.qty}</span>
-                        <button onclick="event.stopPropagation(); changeQty(${idx},1)" class="w-7 h-7 bg-green-600 rounded-full shadow text-white font-bold border border-green-600">+</button>
-                    </div>
-                </div>`;
-        }).join('');
-        
-        document.getElementById('totalVal').innerText = total.toLocaleString() + "đ";
-        document.getElementById('totalQty').innerText = count;
-    }
+                        <img src="${p.img || 'https://placeholder.com'}" class="w-16 h-16 object-cover rounded-xl border bg-gray-50 shadow-inner">
+                    </div>`;
+            });
+        }
 
-    function changeQty(idx, d) {
-        cart[idx].qty += d;
-        if(cart[idx].qty <= 0) cart.splice(idx, 1);
-        updateCartUI();
-    }
+        function addToCart(id) {
+            const p = db.products.find(x => x.id === id);
+            const exist = cart.find(i => i.id === id);
+            if(exist) {
+                exist.qty++;
+            } else {
+                // Sao chép toàn bộ thuộc tính để tính giá sau này
+                cart.push({...p, qty: 1});
+            }
+            updateCartUI();
+        }
 
-    async function saveAndPrint() {
-        if(cart.length === 0) return alert("Giỏ hàng đang trống!");
+        function updateCartUI() {
+            const container = document.getElementById('cartItems');
+            let total = 0, count = 0;
 
-        // In hóa đơn
-        document.getElementById('bill-info').innerHTML = `Ngày: ${new Date().toLocaleString()}<br>Loại giá: ${priceType === 'si' ? 'GIÁ SỈ' : 'GIÁ LẺ'}`;
-        document.getElementById('bill-items').innerHTML = cart.map(i => `<tr><td>${i.name}</td><td class="text-right">x${i.qty}</td></tr>`).join('');
-        document.getElementById('bill-total').innerText = "TỔNG: " + document.getElementById('totalVal').innerText;
-        window.print();
+            if(cart.length === 0) {
+                container.innerHTML = '<div class="text-center py-6 text-gray-400 text-sm italic">Giỏ hàng đang trống...</div>';
+                document.getElementById('totalVal').innerText = "0đ";
+                document.getElementById('totalQty').innerText = "0";
+                return;
+            }
 
-        // Ghi dữ liệu lên Google Sheets
-        const data = { 
-            action: "saveOrder", 
-            customerName: "Khách lẻ - " + (priceType === 'si' ? 'Sỉ' : 'Lẻ'), 
-            total: document.getElementById('totalVal').innerText, 
-            items: cart 
-        };
-        
-        await fetch(API_URL, { method: "POST", body: JSON.stringify(data) });
-        alert("Đơn hàng đã được lưu!");
-        cart = []; updateCartUI();
-    }
+            container.innerHTML = cart.map((i, idx) => {
+                // Tự động chọn giá Sỉ hoặc Lẻ dựa trên Nhóm khách hàng
+                const price = (currentGroup === "Khách Sỉ") ? i.si : i.le;
+                total += price * i.qty;
+                count += i.qty;
+                return `
+                    <div class="flex justify-between items-center bg-gray-50 p-2 rounded-xl border border-gray-200">
+                        <div class="flex items-center gap-2 overflow-hidden">
+                            <img src="${i.img || 'https://placeholder.com'}" class="w-10 h-10 object-cover rounded-lg border flex-shrink-0">
+                            <div class="overflow-hidden">
+                                <div class="font-bold text-[11px] truncate w-28">${i.name}</div>
+                                <div class="text-green-600 text-[10px] font-black">${Number(price).toLocaleString()}đ</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="changeQty(${idx},-1)" class="w-7 h-7 bg-white rounded-full shadow text-red-500 font-bold border">-</button>
+                            <span class="text-xs font-black w-4 text-center">${i.qty}</span>
+                            <button onclick="changeQty(${idx},1)" class="w-7 h-7 bg-green-600 rounded-full text-white font-bold shadow-sm">+</button>
+                        </div>
+                    </div>`;
+            }).join('');
+            
+            document.getElementById('totalVal').innerText = total.toLocaleString() + "đ";
+            document.getElementById('totalQty').innerText = count;
+        }
 
-    init();
-  </script>
+        function changeQty(idx, d) {
+            cart[idx].qty += d;
+            if(cart[idx].qty <= 0) cart.splice(idx, 1);
+            updateCartUI();
+        }
+
+        async function saveAndPrint() {
+            const sel = document.getElementById('cSelect').selectedOptions[0];
+            if(cart.length === 0) return alert("Giỏ hàng đang trống!");
+
+            const customerName = sel.value ? sel.dataset.name : "Khách lẻ";
+
+            // Hiển thị Bill In
+            document.getElementById('bill-info').innerHTML = `
+                <b>Khách hàng: ${customerName}</b><br>
+                Nhóm giá: ${currentGroup}<br>
+                Thời gian: ${new Date().toLocaleString()}
+            `;
+            document.getElementById('bill-items').innerHTML = cart.map(i => {
+                const price = (currentGroup === "Khách Sỉ") ? i.si : i.le;
+                return `<tr><td class="py-1">${i.name}</td><td class="text-right">x${i.qty}</td></tr>`;
+            }).join('');
+            document.getElementById('bill-total').innerText = "TỔNG: " + document.getElementById('totalVal').innerText;
+            
+            window.print();
+
+            // Lưu dữ liệu ngược về Sheet Don_Hang thông qua doPost
+            const orderData = { 
+                action: "saveOrder", 
+                customerName: customerName, 
+                total: document.getElementById('totalVal').innerText, 
+                items: cart.map(i => ({ name: i.name, qty: i.qty, price: (currentGroup === "Khách Sỉ" ? i.si : i.le) }))
+            };
+            
+            await fetch(API_URL, { method: "POST", body: JSON.stringify(orderData) });
+            alert("Đã lưu đơn hàng lên hệ thống!");
+            cart = []; updateCartUI();
+        }
+
+        init();
+    </script>
 </body>
 </html>
