@@ -107,7 +107,6 @@
 
 <!-- Thanh thanh toán cố định -->
 <div class="cart-bar">
-<div></div>
   <button class="btn-order" onclick="submitOrder()">THANH TOÁN & LƯU</button>
   <button class="btn-order" onclick="printBill()">IN BILL</button>
 </div>
@@ -244,34 +243,20 @@ function renderCart() {
     total += subtotal;
 
 container.innerHTML += `
-  <div class="cart-item" style="flex-direction: column; gap:5px;">
-    
-    <div style="display:flex; justify-content:space-between;">
-      <b>${i.name}</b>
-      <span style="color:#e44d26; font-weight:bold;">
-        ${(subtotal).toLocaleString()}đ
-      </span>
+  <div class="cart-item">
+    <div style="flex: 1;">
+      <b>${i.name}</b><br>
+      <input type="number" value="${price}" 
+        onchange="updatePrice('${i.id}', this.value)" 
+        style="width:80px; font-size:13px;">
     </div>
-
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      
-      <div>
-        <input type="number" value="${price}" 
-          onchange="updatePrice('${i.id}', this.value)"
-          style="width:90px; padding:4px; border-radius:6px; border:1px solid #ddd;">
-        <small style="color:#999">đơn giá</small>
-      </div>
-
-      <div class="qty-controls">
-        <button class="btn-qty" onclick="changeQty('${i.id}', -1)">-</button>
-        <span>${i.qty}</span>
-        <button class="btn-qty" onclick="changeQty('${i.id}', 1)">+</button>
-      </div>
-
+    <div class="qty-controls">
+      <button class="btn-qty" onclick="changeQty('${i.id}', -1)">-</button>
+      <span>${i.qty}</span>
+      <button class="btn-qty" onclick="changeQty('${i.id}', 1)">+</button>
     </div>
-
-  </div>
-`;
+  </div>`;
+  });
 
   document.getElementById("cartTotalTop").innerText = total.toLocaleString();
   document.getElementById("cartTotalBar").innerText = total.toLocaleString();
