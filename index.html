@@ -3,176 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini App Bán Hàng</title>
+    <title>Tính Toán Đơn Hàng</title>
     <script src="https://tailwindcss.com"></script>
-    <style>
-        /* Tùy chỉnh thanh cuộn cho mượt */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
-    </style>
 </head>
-<body class="bg-slate-50 min-h-screen pb-10">
+<body class="bg-gray-50 p-4">
 
-    <!-- Header -->
-    <div class="bg-blue-600 p-4 text-white text-center shadow-lg mb-6">
-        <h1 class="text-xl font-bold uppercase">Hệ Thống Lên Đơn Nhanh</h1>
-        <p class="text-xs opacity-80">Dữ liệu thời gian thực từ Google Sheets</p>
-    </div>
+    <div class="max-w-xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-200">
+        <div class="bg-emerald-600 p-4 text-white">
+            <h1 class="text-lg font-bold text-center uppercase tracking-wider">Tính Toán Đơn Hàng Nhanh</h1>
+        </div>
 
-    <div class="max-w-md mx-auto px-4">
-        <!-- Card Chính -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            
-            <!-- Phần Khách Hàng -->
-            <div class="mb-5">
-                <label class="block text-sm font-semibold text-slate-700 mb-2">👤 Khách hàng</label>
-                <select id="select-khach" onchange="updatePrice()" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-                    <option value="">Đang tải danh sách khách hàng...</option>
+        <div class="p-6 space-y-5">
+            <!-- PHẦN CHỌN KHÁCH HÀNG -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">1. Chọn Khách Hàng</label>
+                <select id="select-khach" onchange="updateLogic()" class="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-emerald-500 outline-none">
+                    <option value="">-- Đang tải dữ liệu --</option>
                 </select>
-                <div id="nhom-khach-badge" class="mt-2 hidden">
-                    <span class="text-[10px] px-2 py-1 bg-orange-100 text-orange-600 rounded-full font-bold uppercase tracking-wider">Nhóm: <span id="label-nhom">--</span></span>
-                </div>
+                <div id="info-nhom" class="mt-2 text-xs font-semibold text-emerald-600 italic"></div>
             </div>
 
-            <div class="border-t border-dashed border-slate-200 my-6"></div>
+            <hr>
 
-            <!-- Phần Sản Phẩm -->
-            <div class="mb-5">
-                <label class="block text-sm font-semibold text-slate-700 mb-2">📦 Sản phẩm</label>
-                <select id="select-sp" onchange="updatePrice()" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-                    <option value="">Đang tải sản phẩm...</option>
+            <!-- PHẦN CHỌN SẢN PHẨM -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">2. Chọn Sản Phẩm</label>
+                <select id="select-sp" onchange="updateLogic()" class="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-emerald-500 outline-none">
+                    <option value="">-- Đang tải dữ liệu --</option>
                 </select>
             </div>
 
-            <!-- Giá và Số lượng -->
-            <div class="grid grid-cols-2 gap-4 mb-6">
+            <!-- HIỂN THỊ GIÁ VÀ SỐ LƯỢNG -->
+            <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">💰 Đơn giá</label>
-                    <input type="text" id="don-gia" readonly class="w-full p-3 bg-yellow-50 border border-yellow-200 rounded-xl font-bold text-red-600 outline-none" value="0">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Đơn Giá</label>
+                    <input type="text" id="hien-gia" readonly class="w-full p-3 bg-gray-100 border-2 border-gray-200 rounded-lg text-red-600 font-bold" value="0">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">🔢 Số lượng</label>
-                    <input type="number" id="so-luong" value="1" min="1" oninput="updateTotal()" class="w-full p-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Số Lượng</label>
+                    <input type="number" id="input-sl" value="1" min="1" oninput="tinhTong()" class="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-emerald-500 outline-none">
                 </div>
             </div>
 
-            <!-- Tổng kết -->
-            <div class="bg-slate-900 rounded-2xl p-5 text-white mb-6">
-                <div class="flex justify-between items-center">
-                    <span class="text-slate-400 text-sm">Thành tiền:</span>
-                    <span id="tong-tien" class="text-2xl font-bold text-green-400">0đ</span>
+            <!-- KẾT QUẢ TÍNH TOÁN -->
+            <div class="bg-gray-900 p-5 rounded-xl">
+                <div class="flex justify-between items-center text-white">
+                    <span class="text-gray-400 font-medium">TỔNG CỘNG:</span>
+                    <span id="hien-tong" class="text-3xl font-black text-yellow-400">0 VNĐ</span>
                 </div>
             </div>
 
-            <!-- Nút gửi -->
-            <button id="btn-gui" onclick="saveOrder()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-95 flex justify-center items-center gap-2">
-                <span>XÁC NHẬN ĐƠN HÀNG</span>
+            <button onclick="window.location.reload()" class="w-full py-3 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition">
+                LÀM MỚI LẠI (XÓA DỮ LIỆU)
             </button>
-
         </div>
     </div>
 
     <script>
-        // 1. DÁN LINK GOOGLE APPS SCRIPT CỦA BẠN VÀO ĐÂY
-        const API_URL = "https://script.google.com/macros/s/AKfycbw_MdZkKZBg4zI4mUumdHrMYc7xG8izdHvxsZ0uGdK4FoiKxVLeEn4mtp8SRoGaVVkNPQ/exec";
+        // THAY LINK GOOGLE APPS SCRIPT CỦA BẠN VÀO ĐÂY
+        const URL_API = "https://script.google.com/macros/s/AKfycbw_MdZkKZBg4zI4mUumdHrMYc7xG8izdHvxsZ0uGdK4FoiKxVLeEn4mtp8SRoGaVVkNPQ/exec";
 
-        let dataGlobal = {};
+        let dsKhach = [];
+        let dsSanPham = [];
 
-        // 2. Lấy dữ liệu khi mở App
-        window.onload = async function() {
+        // Lấy dữ liệu khi mở trang
+        window.onload = async () => {
             try {
-                const response = await fetch(API_URL);
-                dataGlobal = await response.json();
+                const res = await fetch(URL_API);
+                const data = await res.json();
                 
-                renderKhachHang(dataGlobal.khach_hang);
-                renderSanPham(dataGlobal.san_pham);
-            } catch (error) {
-                alert("Không thể kết nối với Google Sheet. Vui lòng kiểm tra lại link API!");
+                dsKhach = data.khach_hang;
+                dsSanPham = data.san_pham;
+
+                hienThiDuLieu();
+            } catch (e) {
+                alert("Lỗi kết nối dữ liệu! Hãy kiểm tra link Apps Script.");
             }
         };
 
-        function renderKhachHang(data) {
-            const select = document.getElementById('select-khach');
-            select.innerHTML = '<option value="">-- Chọn khách hàng --</option>';
-            data.forEach(row => {
+        function hienThiDuLieu() {
+            const sKhach = document.getElementById('select-khach');
+            const sSP = document.getElementById('select-sp');
+
+            sKhach.innerHTML = '<option value="">-- Chọn một khách hàng --</option>';
+            dsKhach.forEach(k => {
                 let opt = document.createElement('option');
-                opt.value = row[0]; // Mã KH
-                opt.text = row[1];  // Tên KH
-                opt.setAttribute('data-nhom', row[2]); // Cột Nhóm KH (Sỉ/Lẻ)
-                select.appendChild(opt);
+                opt.value = k[2]; // Cột 2: Nhóm Khách Hàng (Sỉ/Lẻ)
+                opt.text = k[1];  // Cột 1: Tên Khách Hàng
+                sKhach.appendChild(opt);
+            });
+
+            sSP.innerHTML = '<option value="">-- Chọn sản phẩm --</option>';
+            dsSanPham.forEach(p => {
+                let opt = document.createElement('option');
+                opt.text = p[2];      // Cột 2: Tên Sản Phẩm
+                opt.dataset.si = p[6]; // Cột 6: Giá Sỉ
+                opt.dataset.le = p[7]; // Cột 7: Giá Lẻ
+                sSP.appendChild(opt);
             });
         }
 
-        function renderSanPham(data) {
-            const select = document.getElementById('select-sp');
-            select.innerHTML = '<option value="">-- Chọn sản phẩm --</option>';
-            data.forEach(row => {
-                let opt = document.createElement('option');
-                opt.value = row[0]; // Mã SP
-                opt.text = row[2];  // Tên SP
-                opt.setAttribute('data-si', row[6]); // Cột Giá Sỉ
-                opt.setAttribute('data-le', row[7]); // Cột Giá Lẻ
-                select.appendChild(opt);
-            });
-        }
-
-        // 3. Logic xử lý giá theo nhóm khách hàng
-        function updatePrice() {
-            const selectKhach = document.getElementById('select-khach');
-            const selectSp = document.getElementById('select-sp');
+        function updateLogic() {
+            const nhomKhach = document.getElementById('select-khach').value;
+            const itemSP = document.getElementById('select-sp').selectedOptions[0];
+            const hienNhom = document.getElementById('info-nhom');
             
-            const nhomKhach = selectKhach.options[selectKhach.selectedIndex]?.getAttribute('data-nhom');
-            const giaSi = selectSp.options[selectSp.selectedIndex]?.getAttribute('data-si');
-            const giaLe = selectSp.options[selectSp.selectedIndex]?.getAttribute('data-le');
+            if (!nhomKhach || !itemSP.dataset.si) return;
 
-            // Hiển thị Badge nhóm khách
-            if (nhomKhach) {
-                document.getElementById('nhom-khach-badge').classList.remove('hidden');
-                document.getElementById('label-nhom').innerText = nhomKhach;
-            }
+            // Hiển thị nhóm khách cho người dùng thấy
+            hienNhom.innerText = "Áp dụng giá cho khách nhóm: " + nhomKhach;
 
-            // Áp đơn giá: Nếu nhóm là "Sỉ" lấy giá sỉ, ngược lại lấy giá lẻ
-            let giaApDung = (nhomKhach === "Sỉ") ? giaSi : giaLe;
-
-            document.getElementById('don-gia').value = giaApDung || 0;
-            updateTotal();
+            // Quyết định lấy cột giá nào
+            let gia = (nhomKhach === "Sỉ") ? itemSP.dataset.si : itemSP.dataset.le;
+            
+            document.getElementById('hien-gia').value = gia;
+            tinhTong();
         }
 
-        function updateTotal() {
-            const gia = parseInt(document.getElementById('don-gia').value) || 0;
-            const sl = parseInt(document.getElementById('so-luong').value) || 0;
+        function tinhTong() {
+            const gia = parseInt(document.getElementById('hien-gia').value) || 0;
+            const sl = parseInt(document.getElementById('input-sl').value) || 0;
             const tong = gia * sl;
-            document.getElementById('tong-tien').innerText = tong.toLocaleString('vi-VN') + 'đ';
-        }
-
-        // 4. Gửi đơn hàng về Sheet Don_Hang
-        async function saveOrder() {
-            const selectKhach = document.getElementById('select-khach');
-            const btn = document.getElementById('btn-gui');
-            
-            if (!selectKhach.value) return alert("Vui lòng chọn khách hàng!");
-
-            const payload = {
-                tenKhach: selectKhach.options[selectKhach.selectedIndex].text,
-                tongTien: document.getElementById('tong-tien').innerText
-            };
-
-            btn.innerText = "ĐANG LƯU...";
-            btn.disabled = true;
-
-            try {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                alert("Đã lưu đơn hàng thành công!");
-                location.reload(); // Làm mới app
-            } catch (e) {
-                alert("Lỗi khi gửi dữ liệu!");
-                btn.innerText = "XÁC NHẬN ĐƠN HÀNG";
-                btn.disabled = false;
-            }
+            document.getElementById('hien-tong').innerText = tong.toLocaleString('vi-VN') + " VNĐ";
         }
     </script>
 </body>
