@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kiot Pro - Quản lý bán hàng</title>
+    <title>Kiot Pro - New UI</title>
     <script src="https://tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cloudflare.com">
     <style>
@@ -12,7 +12,6 @@
         .tab-content.active { display: block; animation: fadeIn 0.2s ease-out; }
         .active-nav { color: #2563eb !important; background-color: #eff6ff; border-radius: 1rem; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        /* Ẩn hoàn toàn Bill trên màn hình, chỉ hiện khi in */
         #bill-print { display: none; }
         @media print {
             body * { visibility: hidden; }
@@ -26,28 +25,30 @@
     <!-- 1. TAB BÁN HÀNG -->
     <div id="tab-pos" class="tab-content active">
         <header class="bg-white border-b p-4 sticky top-0 z-40 flex justify-between items-center shadow-sm">
-            <span class="font-black text-xl text-blue-600 italic tracking-tighter">KIOT PRO</span>
+            <span class="font-black text-xl text-blue-600 italic tracking-tighter uppercase">Kiot Pro</span>
             <button onclick="location.reload()" class="text-gray-400 p-2"><i class="fa fa-sync-alt"></i></button>
         </header>
         <main class="p-4 space-y-4">
+            <!-- Chọn khách hàng -->
             <div class="bg-white rounded-2xl shadow-sm border p-4 flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600"><i class="fa fa-user"></i></div>
                 <select id="cSelect" class="flex-1 bg-transparent outline-none font-bold text-gray-700" onchange="updateCartUI()"></select>
             </div>
+            <!-- Giỏ hàng -->
             <div class="bg-white rounded-2xl shadow-sm border p-4 min-h-[40vh] flex flex-col">
                 <div class="flex justify-between items-center border-b pb-3 mb-3">
-                    <span class="font-bold text-gray-600">Đơn hàng hiện tại</span>
+                    <span class="font-bold text-gray-600">Đơn hàng</span>
                     <button onclick="openModal('modal-select-p')" class="bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg">+ THÊM MÓN</button>
                 </div>
                 <div id="cartItems" class="space-y-4 flex-1"></div>
             </div>
-            <div class="bg-blue-600 rounded-2xl p-5 text-white shadow-xl shadow-blue-200">
-                <div class="flex justify-between text-sm opacity-80 mb-1"><span>Số lượng: <span id="totalItems">0</span> món</span></div>
+            <!-- Thanh toán -->
+            <div class="bg-blue-600 rounded-2xl p-5 text-white shadow-xl">
                 <div class="flex justify-between items-center mb-4">
-                    <span class="text-lg font-medium">Tổng thanh toán</span>
+                    <span class="text-lg font-medium">Tổng tiền (<span id="totalItems">0</span>)</span>
                     <span id="totalVal" class="text-2xl font-black">0đ</span>
                 </div>
-                <button onclick="saveAndPrint()" class="w-full bg-white text-blue-600 py-4 rounded-xl font-black text-lg active:scale-95 transition">THANH TOÁN & IN BILL</button>
+                <button onclick="saveAndPrint()" class="w-full bg-white text-blue-600 py-4 rounded-xl font-black text-lg active:scale-95 transition">THANH TOÁN & IN</button>
             </div>
         </main>
     </div>
@@ -56,12 +57,12 @@
     <div id="tab-products" class="tab-content">
         <header class="bg-white border-b p-4 sticky top-0 z-40 flex justify-between items-center">
             <h1 class="font-black text-lg">SẢN PHẨM</h1>
-            <button onclick="openProductForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">+ THÊM MỚI</button>
+            <button onclick="openProductForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">+ THÊM</button>
         </header>
         <main class="p-4">
             <div class="relative mb-4">
                 <i class="fa fa-search absolute left-4 top-3.5 text-gray-400"></i>
-                <input type="text" placeholder="Tìm tên hoặc mã hàng..." class="w-full pl-12 pr-4 py-3 bg-white border rounded-xl outline-none focus:border-blue-500 shadow-sm" oninput="renderAdminProducts(this.value)">
+                <input type="text" placeholder="Tìm kiếm sản phẩm..." class="w-full pl-12 pr-4 py-3 bg-white border rounded-xl outline-none shadow-sm" oninput="renderAdminProducts(this.value)">
             </div>
             <div id="admin-p-list" class="space-y-3"></div>
         </main>
@@ -71,15 +72,15 @@
     <div id="tab-customers" class="tab-content">
         <header class="bg-white border-b p-4 sticky top-0 z-40 flex justify-between items-center">
             <h1 class="font-black text-lg">KHÁCH HÀNG</h1>
-            <button onclick="openCustomerForm()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">+ THÊM MỚI</button>
+            <button onclick="openCustomerForm()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">+ THÊM</button>
         </header>
         <main class="p-4">
             <div id="admin-c-list" class="space-y-3"></div>
         </main>
     </div>
 
-    <!-- FOOTER TAB BAR (CỐ ĐỊNH) -->
-    <nav class="fixed bottom-4 left-4 right-4 bg-white/80 backdrop-blur-lg border rounded-3xl flex justify-around p-2 z-50 shadow-2xl">
+    <!-- FOOTER NAV -->
+    <nav class="fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md border rounded-3xl flex justify-around p-2 z-50 shadow-2xl">
         <button onclick="showTab('pos')" id="nav-pos" class="flex flex-col items-center gap-1 py-2 px-6 active-nav transition-all">
             <i class="fa fa-cash-register text-lg"></i><span class="text-[10px] font-bold">Bán hàng</span>
         </button>
@@ -92,35 +93,32 @@
     </nav>
 
     <!-- MODAL CHỌN SẢN PHẨM -->
-    <div id="modal-select-p" class="fixed inset-0 bg-black/60 z-[60] hidden flex items-end">
-        <div class="bg-white w-full h-[85vh] rounded-t-[2.5rem] flex flex-col p-6 shadow-2xl overflow-hidden">
+    <div id="modal-select-p" class="fixed inset-0 bg-black/60 z-50 hidden flex items-end">
+        <div class="bg-white w-full h-[85vh] rounded-t-[2rem] flex flex-col p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-4">
-                <span class="font-black text-lg">DANH SÁCH HÀNG</span>
+                <span class="font-black text-lg uppercase tracking-tight">Chọn hàng hóa</span>
                 <button onclick="closeModal('modal-select-p')" class="w-10 h-10 bg-gray-100 rounded-full text-gray-500 font-bold">&times;</button>
             </div>
-            <input type="text" id="pSearch" placeholder="Tìm hàng hóa nhanh..." class="w-full p-4 bg-gray-100 rounded-2xl mb-4 outline-none focus:ring-2 focus:ring-blue-400" oninput="renderPOSProducts()">
-            <div id="pos-p-grid" class="grid grid-cols-3 gap-3 overflow-y-auto hide-scrollbar pb-10"></div>
+            <input type="text" id="pSearch" placeholder="Tìm tên hàng nhanh..." class="w-full p-4 bg-gray-100 rounded-2xl mb-4 outline-none border focus:border-blue-400" oninput="renderPOSProducts()">
+            <div id="pos-p-list" class="space-y-3 overflow-y-auto hide-scrollbar pb-10"></div>
         </div>
     </div>
 
-    <!-- FORM THÊM/SỬA -->
-    <div id="modal-form" class="fixed inset-0 bg-black/60 z-[60] hidden flex items-center justify-center p-6">
+    <!-- FORM MODAL -->
+    <div id="modal-form" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-6">
         <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl">
-            <h3 id="form-title" class="font-black text-lg mb-5 text-blue-600 border-b pb-2 italic uppercase">Cập nhật thông tin</h3>
+            <h3 id="form-title" class="font-black text-lg mb-5 text-blue-600 border-b pb-2 italic uppercase">Cập nhật</h3>
             <div id="form-fields" class="space-y-4"></div>
             <div class="flex gap-3 mt-8">
-                <button onclick="closeModal('modal-form')" class="flex-1 py-3 bg-gray-100 rounded-2xl font-bold text-gray-500 uppercase">Hủy</button>
-                <button id="btnSave" class="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-bold uppercase">Lưu lại</button>
+                <button onclick="closeModal('modal-form')" class="flex-1 py-3 bg-gray-100 rounded-2xl font-bold text-gray-400">HỦY</button>
+                <button id="btnSave" class="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-bold">LƯU</button>
             </div>
         </div>
     </div>
 
-    <!-- BILL IN ẨN (CHỈ DÙNG ĐỂ IN) -->
+    <!-- BILL IN ẨN -->
     <div id="bill-print" class="font-mono p-4 text-[10pt]">
-        <center>
-            <strong style="font-size: 16pt;">HÓA ĐƠN BÁN HÀNG</strong><br>
-            --------------------------------
-        </center>
+        <center><strong>HÓA ĐƠN BÁN HÀNG</strong><br>--------------------------------</center>
         <div id="bill-info" class="my-4"></div>
         <table class="w-full border-t border-b border-black border-dashed my-4">
             <thead><tr class="text-left"><th>Sản phẩm</th><th class="text-right">SL</th></tr></thead>
@@ -149,14 +147,10 @@
 
         function showTab(tab) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('nav button').forEach(el => {
-                el.classList.remove('active-nav');
-                el.classList.add('text-gray-400');
-            });
+            document.querySelectorAll('nav button').forEach(el => { el.classList.remove('active-nav'); el.classList.add('text-gray-400'); });
             document.getElementById('tab-' + tab).classList.add('active');
             const navBtn = document.getElementById('nav-' + tab);
-            navBtn.classList.add('active-nav');
-            navBtn.classList.remove('text-gray-400');
+            navBtn.classList.add('active-nav'); navBtn.classList.remove('text-gray-400');
         }
 
         function renderCustomerSelect() {
@@ -165,16 +159,20 @@
             db.customers.forEach(c => { sel.innerHTML += `<option value="${c.id}" data-group="${c.group}" data-name="${c.name}">👤 ${c.name}</option>`; });
         }
 
+        // --- GIAO DIỆN CHỌN HÀNG (Ảnh bên phải, thông tin bên trái) ---
         function renderPOSProducts() {
-            const grid = document.getElementById('pos-p-grid');
+            const list = document.getElementById('pos-p-list');
             const search = document.getElementById('pSearch').value.toLowerCase();
-            grid.innerHTML = "";
+            list.innerHTML = "";
             db.products.filter(p => p.name.toLowerCase().includes(search)).forEach(p => {
-                grid.innerHTML += `
-                    <div class="bg-white border rounded-2xl p-2 text-center active:scale-90 transition shadow-sm" onclick="addToCart('${p.id}')">
-                        <img src="${p.img || 'https://placeholder.com'}" class="w-12 h-12 mx-auto object-cover rounded-xl mb-1 shadow-sm">
-                        <div class="text-[9px] font-bold truncate h-3 text-gray-500 uppercase">${p.name}</div>
-                        <div class="text-blue-600 text-[10px] font-black">${p.le.toLocaleString()}</div>
+                list.innerHTML += `
+                    <div class="bg-white p-3 rounded-2xl border flex justify-between items-center active:bg-blue-50 transition shadow-sm" onclick="addToCart('${p.id}')">
+                        <div class="flex-1 pr-3">
+                            <div class="font-bold text-sm text-gray-800 leading-tight">${p.name}</div>
+                            <div class="text-[10px] text-gray-400 mt-1 uppercase">${p.id}</div>
+                            <div class="text-blue-600 font-black text-sm mt-1">${p.le.toLocaleString()}đ</div>
+                        </div>
+                        <img src="${p.img || 'https://placeholder.com'}" class="w-14 h-14 object-cover rounded-xl border bg-gray-50 shadow-inner">
                     </div>`;
             });
         }
@@ -187,29 +185,25 @@
         }
 
         function updateCartUI() {
-            const sel = document.getElementById('cSelect').selectedOptions[0];
+            const sel = document.getElementById('cSelect').selectedOptions;
             const group = sel.dataset.group || "Khách Lẻ";
             const container = document.getElementById('cartItems');
             let total = 0, count = 0;
-
             if(cart.length === 0) {
-                container.innerHTML = '<div class="text-center py-10 text-gray-300 italic text-sm">Chưa có sản phẩm...</div>';
-                document.getElementById('totalVal').innerText = "0đ";
-                document.getElementById('totalItems').innerText = "0";
+                container.innerHTML = '<div class="text-center py-10 text-gray-300 italic text-sm">Chưa có món nào...</div>';
+                document.getElementById('totalVal').innerText = "0đ"; document.getElementById('totalItems').innerText = "0";
                 return;
             }
-
             container.innerHTML = cart.map((i, idx) => {
                 const price = (group === "Khách Sỉ") ? i.si : i.le;
-                total += price * i.qty;
-                count += i.qty;
+                total += price * i.qty; count += i.qty;
                 return `
-                <div class="flex justify-between items-center bg-gray-50 p-2 rounded-2xl">
+                <div class="flex justify-between items-center bg-gray-50 p-2 rounded-2xl border">
                     <div class="flex items-center gap-3">
                         <img src="${i.img || 'https://placeholder.com'}" class="w-10 h-10 object-cover rounded-lg border">
                         <div>
-                            <div class="font-bold text-sm">${i.name}</div>
-                            <div class="text-blue-600 text-xs font-black">${price.toLocaleString()}đ</div>
+                            <div class="font-bold text-xs">${i.name}</div>
+                            <div class="text-blue-600 text-[10px] font-black">${price.toLocaleString()}đ</div>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -223,47 +217,40 @@
             document.getElementById('totalItems').innerText = count;
         }
 
-        function changeQty(idx, d) {
-            cart[idx].qty += d;
-            if(cart[idx].qty <= 0) cart.splice(idx, 1);
-            updateCartUI();
-        }
+        function changeQty(idx, d) { cart[idx].qty += d; if(cart[idx].qty <= 0) cart.splice(idx, 1); updateCartUI(); }
 
         async function saveAndPrint() {
-            const sel = document.getElementById('cSelect').selectedOptions[0];
-            if(cart.length === 0) return alert("Vui lòng thêm hàng!");
+            const sel = document.getElementById('cSelect').selectedOptions;
+            if(cart.length === 0) return alert("Vui lòng chọn hàng!");
             document.getElementById('bill-info').innerHTML = `Khách: <strong>${sel.dataset.name || 'Khách lẻ'}</strong><br>Ngày: ${new Date().toLocaleString()}`;
             document.getElementById('bill-items').innerHTML = cart.map(i => `<tr><td>${i.name}</td><td class="text-right">x${i.qty}</td></tr>`).join('');
             document.getElementById('bill-total').innerText = "TỔNG: " + document.getElementById('totalVal').innerText;
             window.print();
             const data = { action: "saveOrder", customerName: sel.dataset.name || 'Khách lẻ', total: document.getElementById('totalVal').innerText, items: cart };
             await fetch(API_URL, { method: "POST", body: JSON.stringify(data) });
-            alert("Lưu đơn thành công!");
-            cart = []; updateCartUI();
+            alert("Lưu đơn thành công!"); cart = []; updateCartUI();
         }
 
+        // --- QUẢN LÝ SẢN PHẨM (Ảnh nhỏ bên phải) ---
         function renderAdminProducts(filter = "") {
             const list = document.getElementById('admin-p-list');
             list.innerHTML = db.products.filter(p => p.name.toLowerCase().includes(filter.toLowerCase())).map(p => `
-                <div class="bg-white p-3 rounded-2xl shadow-sm flex items-center justify-between border" onclick="openProductForm('${p.id}')">
-                    <div class="flex items-center gap-3">
-                        <img src="${p.img || 'https://placeholder.com'}" class="w-12 h-12 rounded-xl object-cover border shadow-sm">
-                        <div>
-                            <div class="font-bold text-sm">${p.name}</div>
-                            <div class="text-[10px] text-blue-500 font-bold">Lẻ: ${p.le.toLocaleString()}đ</div>
-                        </div>
+                <div class="bg-white p-3 rounded-2xl shadow-sm flex items-center justify-between border active:bg-gray-50" onclick="openProductForm('${p.id}')">
+                    <div class="flex-1">
+                        <div class="font-bold text-sm text-gray-800 leading-tight">${p.name}</div>
+                        <div class="text-[10px] text-blue-500 font-bold mt-1 tracking-wider uppercase">Lẻ: ${p.le.toLocaleString()}đ</div>
                     </div>
-                    <i class="fa fa-chevron-right text-gray-200"></i>
+                    <img src="${p.img || 'https://placeholder.com'}" class="w-12 h-12 rounded-xl object-cover border shadow-sm ml-3">
                 </div>`).join('');
         }
 
         function renderAdminCustomers() {
             const list = document.getElementById('admin-c-list');
             list.innerHTML = db.customers.map(c => `
-                <div class="bg-white p-3 rounded-2xl shadow-sm flex justify-between items-center border" onclick="openCustomerForm('${c.id}')">
+                <div class="bg-white p-3 rounded-2xl shadow-sm flex justify-between items-center border active:bg-gray-50" onclick="openCustomerForm('${c.id}')">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 bg-green-50 text-green-600 rounded-full flex items-center justify-center font-bold">${c.name.charAt(0)}</div>
-                        <div><div class="font-bold text-sm">${c.name}</div><div class="text-[10px] text-gray-400">${c.group}</div></div>
+                        <div><div class="font-bold text-sm text-gray-800">${c.name}</div><div class="text-[10px] text-gray-400 font-medium">${c.group}</div></div>
                     </div>
                     <i class="fa fa-chevron-right text-gray-200"></i>
                 </div>`).join('');
@@ -274,7 +261,7 @@
             document.getElementById('form-title').innerText = id ? "Sửa hàng hóa" : "Thêm hàng hóa";
             document.getElementById('form-fields').innerHTML = `
                 <input id="f-id" placeholder="Mã hàng" class="w-full p-4 bg-gray-50 border rounded-2xl" value="${p.id}">
-                <input id="f-name" placeholder="Tên sản phẩm" class="w-full p-4 bg-gray-50 border rounded-2xl font-bold" value="${p.name}">
+                <input id="f-name" placeholder="Tên sản phẩm" class="w-full p-4 bg-gray-50 border rounded-2xl font-bold text-gray-800" value="${p.name}">
                 <div class="grid grid-cols-2 gap-3">
                     <input id="f-si" type="number" placeholder="Giá sỉ" class="p-4 bg-gray-50 border rounded-2xl" value="${p.si}">
                     <input id="f-le" type="number" placeholder="Giá lẻ" class="p-4 bg-gray-50 border rounded-2xl text-blue-600 font-bold" value="${p.le}">
@@ -286,10 +273,10 @@
 
         function openCustomerForm(id = '') {
             const c = db.customers.find(x => x.id === id) || {id:'', name:'', group:'Khách Lẻ', phone:''};
-            document.getElementById('form-title').innerText = id ? "Sửa đối tác" : "Thêm đối tác";
+            document.getElementById('form-title').innerText = id ? "Sửa khách hàng" : "Thêm khách hàng";
             document.getElementById('form-fields').innerHTML = `
                 <input id="f-id" placeholder="Mã khách" class="w-full p-4 bg-gray-50 border rounded-2xl" value="${c.id}">
-                <input id="f-name" placeholder="Tên khách hàng" class="w-full p-4 bg-gray-50 border rounded-2xl font-bold" value="${c.name}">
+                <input id="f-name" placeholder="Tên khách" class="w-full p-4 bg-gray-50 border rounded-2xl font-bold" value="${c.name}">
                 <select id="f-group" class="w-full p-4 bg-gray-50 border rounded-2xl">
                     <option ${c.group=='Khách Lẻ'?'selected':''}>Khách Lẻ</option>
                     <option ${c.group=='Khách Sỉ'?'selected':''}>Khách Sỉ</option>
