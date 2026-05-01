@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart POS v3</title>
+    <title>Kiot Mini - Quản lý bán hàng</title>
     <script src="https://tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cloudflare.com">
     <style>
-        .tab-content { display: none; padding-bottom: 80px; }
-        .tab-content.active { display: block; }
-        .nav-item.active { color: #2563eb; }
-        .nav-item.active i { transform: translateY(-5px); transition: 0.3s; }
+        body { font-family: 'Inter', sans-serif; background-color: #f4f6f8; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        .active-nav { color: #007bff !important; }
+        .active-nav i { transform: scale(1.1); }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
         @media print {
             body * { visibility: hidden; }
             #bill-print, #bill-print * { visibility: visible; }
@@ -18,155 +21,172 @@
         }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="text-gray-800">
 
-    <!-- TAB 1: BÁN HÀNG -->
+    <!-- TAB 1: BÁN HÀNG (POS) -->
     <div id="tab-pos" class="tab-content active">
-        <header class="bg-white p-4 shadow-sm sticky top-0 z-10 flex justify-between items-center">
-            <h1 class="text-xl font-black text-blue-600">🛒 POS</h1>
-            <button onclick="location.reload()" class="text-gray-400"><i class="fa fa-sync"></i></button>
+        <header class="bg-white border-b p-4 sticky top-0 z-10 flex justify-between items-center">
+            <span class="font-bold text-lg text-blue-600">KIOT MINI</span>
+            <div class="flex gap-4">
+                <button onclick="location.reload()" class="text-gray-500"><i class="fa fa-sync-alt"></i></button>
+            </div>
         </header>
         
-        <main class="p-4">
-            <!-- Chọn khách -->
-            <div class="bg-blue-600 p-4 rounded-2xl mb-4 shadow-lg text-white">
-                <label class="text-xs opacity-80 mb-1 block">Khách hàng thanh toán:</label>
-                <select id="cSelect" class="w-full bg-blue-500 text-white border-none p-2 rounded-lg outline-none font-bold" onchange="updateCartUI()">
-                    <option value="">-- Chọn khách hàng --</option>
+        <main class="p-3 space-y-3">
+            <!-- Chọn khách hàng -->
+            <div class="bg-white rounded-lg shadow-sm border p-3 flex items-center gap-3">
+                <i class="fa fa-user text-gray-400"></i>
+                <select id="cSelect" class="flex-1 bg-transparent outline-none font-medium" onchange="updateCartUI()">
+                    <option value="">Khách lẻ</option>
                 </select>
             </div>
 
             <!-- Giỏ hàng -->
-            <div class="bg-white rounded-2xl p-4 shadow-sm min-h-[400px]">
-                <div class="flex justify-between items-center mb-4 border-b pb-2">
-                    <h2 class="font-bold">Đơn hàng hiện tại</h2>
-                    <button onclick="openModal('modal-select-p')" class="text-blue-600 font-bold text-sm">+ Thêm món</button>
+            <div class="bg-white rounded-lg shadow-sm border p-3 min-h-[50vh]">
+                <div class="flex justify-between items-center border-b pb-2 mb-3">
+                    <span class="font-bold">Đơn hàng</span>
+                    <button onclick="openModal('modal-select-p')" class="text-blue-600 text-sm font-bold uppercase">+ Thêm món</button>
                 </div>
-                <div id="cartItems" class="space-y-4"></div>
-                
-                <div class="mt-10 border-t pt-4">
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-gray-500">Tổng cộng:</span>
-                        <span id="totalVal" class="text-2xl font-black text-red-600">0đ</span>
-                    </div>
-                    <button onclick="saveAndPrint()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-blue-200 shadow-lg">XUẤT HOÁ ĐƠN</button>
+                <div id="cartItems" class="space-y-4">
+                    <div class="text-center py-10 text-gray-400 text-sm">Chưa có sản phẩm nào</div>
                 </div>
+            </div>
+
+            <!-- Thanh toán -->
+            <div class="bg-white rounded-lg shadow-sm border p-4 space-y-3">
+                <div class="flex justify-between items-center text-gray-500">
+                    <span>Tổng tiền hàng</span>
+                    <span id="totalItems" class="font-bold text-black">0</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-lg font-bold">Khách cần trả</span>
+                    <span id="totalVal" class="text-xl font-black text-blue-600">0</span>
+                </div>
+                <button onclick="saveAndPrint()" class="w-full bg-blue-600 text-white py-4 rounded-lg font-bold text-lg shadow-lg active:bg-blue-700 transition">THANH TOÁN</button>
             </div>
         </main>
     </div>
 
-    <!-- TAB 2: DANH SÁCH SẢN PHẨM -->
+    <!-- TAB 2: SẢN PHẨM -->
     <div id="tab-products" class="tab-content">
-        <header class="bg-white p-4 shadow-sm sticky top-0 z-10 flex justify-between">
-            <h1 class="text-xl font-bold">📦 SẢN PHẨM</h1>
-            <button onclick="openProductForm()" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm">+ Thêm</button>
+        <header class="bg-white border-b p-4 sticky top-0 z-10 flex justify-between items-center">
+            <h1 class="font-bold text-lg">HÀNG HÓA</h1>
+            <button onclick="openProductForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold">+ Thêm</button>
         </header>
-        <main class="p-4">
-            <input type="text" placeholder="Tìm tên sản phẩm..." class="w-full p-3 bg-white border rounded-xl mb-4 shadow-sm" oninput="renderAdminProducts(this.value)">
-            <div id="admin-p-list" class="grid grid-cols-1 gap-3"></div>
+        <main class="p-3">
+            <div class="relative mb-4">
+                <i class="fa fa-search absolute left-3 top-3 text-gray-400"></i>
+                <input type="text" placeholder="Theo tên, mã hàng..." class="w-full pl-10 pr-4 py-2 bg-white border rounded-lg outline-none" oninput="renderAdminProducts(this.value)">
+            </div>
+            <div id="admin-p-list" class="space-y-2"></div>
         </main>
     </div>
 
-    <!-- TAB 3: DANH SÁCH KHÁCH HÀNG -->
+    <!-- TAB 3: KHÁCH HÀNG -->
     <div id="tab-customers" class="tab-content">
-        <header class="bg-white p-4 shadow-sm sticky top-0 z-10 flex justify-between">
-            <h1 class="text-xl font-bold">👥 KHÁCH HÀNG</h1>
-            <button onclick="openCustomerForm()" class="bg-green-600 text-white px-3 py-1 rounded-lg text-sm">+ Thêm</button>
+        <header class="bg-white border-b p-4 sticky top-0 z-10 flex justify-between items-center">
+            <h1 class="font-bold text-lg">KHÁCH HÀNG</h1>
+            <button onclick="openCustomerForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold">+ Thêm</button>
         </header>
-        <main class="p-4">
-            <div id="admin-c-list" class="space-y-3"></div>
+        <main class="p-3">
+            <div id="admin-c-list" class="space-y-2"></div>
         </main>
     </div>
 
-    <!-- THANH ĐIỀU HƯỚNG DƯỚI CÙNG (TAB BAR) -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around p-3 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-        <button onclick="showTab('pos')" id="nav-pos" class="nav-item flex flex-col items-center active">
-            <i class="fa fa-cash-register text-lg"></i><span class="text-[10px] mt-1">Bán hàng</span>
+    <!-- FOOTER TAB BAR (KiotViet Style) -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around p-2 z-40 shadow-2xl">
+        <button onclick="showTab('pos')" id="nav-pos" class="flex flex-col items-center gap-1 active-nav text-gray-400">
+            <i class="fa fa-shopping-cart text-xl"></i><span class="text-[10px] font-bold">Bán hàng</span>
         </button>
-        <button onclick="showTab('products')" id="nav-products" class="nav-item flex flex-col items-center text-gray-400">
-            <i class="fa fa-box text-lg"></i><span class="text-[10px] mt-1">Sản phẩm</span>
+        <button onclick="showTab('products')" id="nav-products" class="flex flex-col items-center gap-1 text-gray-400">
+            <i class="fa fa-box text-xl"></i><span class="text-[10px] font-bold">Hàng hóa</span>
         </button>
-        <button onclick="showTab('customers')" id="nav-customers" class="nav-item flex flex-col items-center text-gray-400">
-            <i class="fa fa-users text-lg"></i><span class="text-[10px] mt-1">Khách hàng</span>
+        <button onclick="showTab('customers')" id="nav-customers" class="flex flex-col items-center gap-1 text-gray-400">
+            <i class="fa fa-users text-xl"></i><span class="text-[10px] font-bold">Đối tác</span>
         </button>
     </nav>
 
     <!-- MODAL CHỌN SẢN PHẨM (KHI BÁN) -->
-    <div id="modal-select-p" class="fixed inset-0 bg-black/50 z-[60] hidden p-4 flex items-end">
-        <div class="bg-white w-full h-[80vh] rounded-t-3xl p-4 overflow-y-auto">
-            <div class="flex justify-between mb-4 sticky top-0 bg-white pb-2">
-                <h3 class="font-bold">Thêm vào giỏ</h3>
-                <button onclick="closeModal('modal-select-p')" class="text-2xl">&times;</button>
+    <div id="modal-select-p" class="fixed inset-0 bg-black/50 z-50 hidden flex items-end">
+        <div class="bg-white w-full h-[85vh] rounded-t-2xl flex flex-col p-4">
+            <div class="flex justify-between items-center mb-4">
+                <span class="font-bold text-lg">Chọn hàng hóa</span>
+                <button onclick="closeModal('modal-select-p')" class="text-2xl text-gray-400">&times;</button>
             </div>
-            <div id="pos-p-grid" class="grid grid-cols-2 gap-3"></div>
+            <input type="text" id="pSearch" placeholder="Tìm kiếm nhanh..." class="w-full p-3 bg-gray-100 rounded-lg mb-4 outline-none" oninput="renderPOSProducts()">
+            <div id="pos-p-grid" class="grid grid-cols-2 gap-3 overflow-y-auto hide-scrollbar"></div>
         </div>
     </div>
 
-    <!-- MODAL FORM THÊM/SỬA -->
-    <div id="modal-form" class="fixed inset-0 bg-black/50 z-[70] hidden p-4 flex items-center">
-        <div class="bg-white w-full rounded-2xl p-5 shadow-2xl">
-            <h3 id="form-title" class="font-bold text-lg mb-4">Thông tin</h3>
-            <div id="form-fields" class="space-y-3 max-h-[60vh] overflow-y-auto"></div>
-            <div class="flex gap-2 mt-6">
-                <button onclick="closeModal('modal-form')" class="flex-1 py-3 bg-gray-100 rounded-xl font-bold">Huỷ</button>
-                <button id="btnSave" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold">Lưu dữ liệu</button>
+    <!-- FORM MODAL (THÊM/SỬA) -->
+    <div id="modal-form" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-xl p-5 shadow-2xl">
+            <h3 id="form-title" class="font-bold text-lg mb-4 border-b pb-2">Thông tin</h3>
+            <div id="form-fields" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2"></div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeModal('modal-form')" class="flex-1 py-3 bg-gray-100 rounded-lg font-bold">Hủy</button>
+                <button id="btnSave" class="flex-1 py-3 bg-blue-600 text-white rounded-lg font-bold">Lưu lại</button>
             </div>
         </div>
     </div>
 
-    <!-- MẪU IN BILL K80 -->
-    <div id="bill-print" class="hidden font-mono text-[10pt]">
+    <!-- BILL IN K80 -->
+    <div id="bill-print" class="hidden text-[10pt] font-mono p-4">
         <center>
-            <strong style="font-size: 14pt;">HÓA ĐƠN BÁN HÀNG</strong><br>
+            <strong style="font-size: 14pt;">HOÁ ĐƠN BÁN HÀNG</strong><br>
             --------------------------------
         </center>
-        <div id="bill-info" class="my-2"></div>
-        <table class="w-full border-t border-black mb-2">
+        <div id="bill-info" class="my-3"></div>
+        <table class="w-full border-t border-black mb-3">
             <tbody id="bill-items"></tbody>
         </table>
-        <div id="bill-total" class="text-right font-bold text-[12pt] border-t border-black pt-1"></div>
-        <center class="mt-4 text-[8pt]">Cảm ơn quý khách!</center>
+        <div id="bill-total" class="text-right font-bold text-[12pt] border-t border-black pt-2"></div>
+        <center class="mt-6 text-[8pt]">Cảm ơn quý khách!</center>
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycby04hYPrGtuKQCUfyGS50oHlfHjxhoQ_wP7GL4_3HikJt_2OUyOX5E46Lu0jDRWbOqWrQ/exec";
+        const API_URL = "DÁN_URL_APPSCRIPT_CỦA_BẠN";
         let db = { products: [], customers: [] };
         let cart = [];
 
-        async function loadData() {
+        async function init() {
             try {
                 const res = await fetch(API_URL);
                 db = await res.json();
-                renderPOSConfigs();
+                renderCustomerSelect();
                 renderAdminProducts();
                 renderAdminCustomers();
-            } catch (e) { alert("Không thể kết nối Google Sheets!"); }
+            } catch (e) { alert("Lỗi kết nối dữ liệu!"); }
         }
 
         function showTab(tab) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active', 'text-gray-400'));
+            document.querySelectorAll('nav button').forEach(el => el.classList.remove('active-nav'));
             document.getElementById('tab-' + tab).classList.add('active');
-            document.getElementById('nav-' + tab).classList.add('active');
-            document.querySelectorAll('.nav-item:not(.active)').forEach(el => el.classList.add('text-gray-400'));
+            document.getElementById('nav-' + tab).classList.add('active-nav');
         }
 
-        // --- HÀM BÁN HÀNG ---
-        function renderPOSConfigs() {
+        // --- BÁN HÀNG (POS) ---
+        function renderCustomerSelect() {
             const sel = document.getElementById('cSelect');
-            sel.innerHTML = '<option value="">-- Chọn khách hàng --</option>';
+            sel.innerHTML = '<option value="">Khách lẻ</option>';
             db.customers.forEach(c => {
                 sel.innerHTML += `<option value="${c.id}" data-group="${c.group}" data-name="${c.name}">${c.name}</option>`;
             });
+        }
 
+        function renderPOSProducts() {
             const grid = document.getElementById('pos-p-grid');
-            grid.innerHTML = db.products.map(p => `
-                <div class="bg-gray-50 p-2 rounded-xl border text-center active:scale-95 transition" onclick="addToCart('${p.id}')">
-                    <img src="${p.img || 'https://placeholder.com'}" class="w-full h-20 object-cover rounded-lg mb-1">
-                    <div class="text-[10px] font-bold truncate">${p.name}</div>
-                    <div class="text-blue-600 text-xs font-bold">${Number(p.le).toLocaleString()}đ</div>
-                </div>
-            `).join('');
+            const search = document.getElementById('pSearch').value.toLowerCase();
+            grid.innerHTML = "";
+            db.products.filter(p => p.name.toLowerCase().includes(search)).forEach(p => {
+                grid.innerHTML += `
+                    <div class="bg-gray-50 border rounded-lg p-2 text-center active:bg-blue-50" onclick="addToCart('${p.id}')">
+                        <img src="${p.img || 'https://placeholder.com'}" class="w-16 h-16 mx-auto object-cover rounded-md mb-2">
+                        <div class="text-[11px] font-bold truncate">${p.name}</div>
+                        <div class="text-blue-600 text-xs font-black">${Number(p.le).toLocaleString()}</div>
+                    </div>`;
+            });
         }
 
         function addToCart(id) {
@@ -177,33 +197,39 @@
         }
 
         function updateCartUI() {
-            const group = document.getElementById('cSelect').selectedOptions[0]?.dataset.group || "Khách Lẻ";
+            const group = document.getElementById('cSelect').selectedOptions[0].dataset.group || "Khách Lẻ";
             const container = document.getElementById('cartItems');
-            let total = 0;
+            let total = 0, count = 0;
 
             if(cart.length === 0) {
-                container.innerHTML = '<p class="text-center text-gray-400 py-10">Trống</p>';
-                document.getElementById('totalVal').innerText = "0đ";
+                container.innerHTML = '<div class="text-center py-10 text-gray-400 text-sm">Chưa có sản phẩm nào</div>';
+                document.getElementById('totalVal').innerText = "0";
+                document.getElementById('totalItems').innerText = "0";
                 return;
             }
 
             container.innerHTML = cart.map((i, idx) => {
                 const price = (group === "Khách Sỉ") ? i.si : i.le;
                 total += price * i.qty;
+                count += i.qty;
                 return `
-                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl">
-                    <div>
-                        <div class="font-bold text-sm">${i.name}</div>
-                        <div class="text-xs text-blue-600">${Number(price).toLocaleString()}đ</div>
-                    </div>
+                <div class="flex justify-between items-center border-b pb-3">
                     <div class="flex items-center gap-3">
-                        <button onclick="changeQty(${idx},-1)" class="w-7 h-7 bg-white shadow-sm rounded-full">-</button>
-                        <span class="font-bold text-sm">${i.qty}</span>
-                        <button onclick="changeQty(${idx},1)" class="w-7 h-7 bg-white shadow-sm rounded-full">+</button>
+                        <img src="${i.img}" class="w-10 h-10 object-cover rounded">
+                        <div>
+                            <div class="font-bold text-sm">${i.name}</div>
+                            <div class="text-blue-600 text-xs">${Number(price).toLocaleString()}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="changeQty(${idx},-1)" class="w-7 h-7 bg-gray-100 rounded-full">-</button>
+                        <span class="text-sm font-bold w-4 text-center">${i.qty}</span>
+                        <button onclick="changeQty(${idx},1)" class="w-7 h-7 bg-gray-100 rounded-full">+</button>
                     </div>
                 </div>`;
             }).join('');
-            document.getElementById('totalVal').innerText = total.toLocaleString() + "đ";
+            document.getElementById('totalVal').innerText = total.toLocaleString();
+            document.getElementById('totalItems').innerText = count;
         }
 
         function changeQty(idx, d) {
@@ -213,64 +239,60 @@
         }
 
         async function saveAndPrint() {
-            const c = document.getElementById('cSelect').selectedOptions[0];
-            if(!c.value || cart.length === 0) return alert("Chưa có khách hoặc sản phẩm!");
+            const sel = document.getElementById('cSelect').selectedOptions[0];
+            if(cart.length === 0) return alert("Giỏ hàng trống!");
 
-            document.getElementById('bill-info').innerHTML = `KH: ${c.dataset.name}<br>Ngày: ${new Date().toLocaleString()}`;
-            document.getElementById('bill-items').innerHTML = cart.map(i => `<tr><td>${i.name}</td><td class="text-right">x${i.qty}</td></tr>`).join('');
-            document.getElementById('bill-total').innerText = "TỔNG: " + document.getElementById('totalVal').innerText;
-            
+            document.getElementById('bill-info').innerHTML = `Khách: ${sel.dataset.name || 'Khách lẻ'}<br>Ngày: ${new Date().toLocaleString()}`;
+            document.getElementById('bill-items').innerHTML = cart.map(i => `<tr><td>${i.name}</td><td class="text-right">${i.qty}</td></tr>`).join('');
+            document.getElementById('bill-total').innerText = "Tổng: " + document.getElementById('totalVal').innerText;
             window.print();
 
-            const data = { action: "saveOrder", customerName: c.dataset.name, total: document.getElementById('totalVal').innerText, items: cart };
+            const data = { action: "saveOrder", customerName: sel.dataset.name || 'Khách lẻ', total: document.getElementById('totalVal').innerText, items: cart };
             await fetch(API_URL, { method: "POST", body: JSON.stringify(data) });
-            alert("Đơn hàng đã được lưu!");
+            alert("Đã hoàn thành đơn hàng!");
             cart = []; updateCartUI();
         }
 
-        // --- HÀM QUẢN LÝ ---
+        // --- QUẢN LÝ ---
         function renderAdminProducts(filter = "") {
             const list = document.getElementById('admin-p-list');
             list.innerHTML = db.products.filter(p => p.name.toLowerCase().includes(filter.toLowerCase())).map(p => `
-                <div class="bg-white p-3 rounded-xl shadow-sm flex items-center gap-3">
-                    <img src="${p.img}" class="w-12 h-12 rounded-lg object-cover">
-                    <div class="flex-1">
-                        <div class="font-bold text-sm">${p.name}</div>
-                        <div class="text-[10px] text-gray-400">Sỉ: ${Number(p.si).toLocaleString()} | Lẻ: ${Number(p.le).toLocaleString()}</div>
+                <div class="bg-white p-3 rounded-lg shadow-sm flex items-center justify-between border" onclick="openProductForm('${p.id}')">
+                    <div class="flex items-center gap-3">
+                        <img src="${p.img}" class="w-12 h-12 rounded object-cover">
+                        <div>
+                            <div class="font-bold text-sm">${p.name}</div>
+                            <div class="text-blue-600 text-xs font-bold">${Number(p.le).toLocaleString()}</div>
+                        </div>
                     </div>
-                    <button onclick="openProductForm('${p.id}')" class="text-blue-500 text-xs font-bold px-3 py-1 bg-blue-50 rounded-lg">Sửa</button>
-                </div>
-            `).join('');
+                    <i class="fa fa-angle-right text-gray-300"></i>
+                </div>`).join('');
         }
 
         function renderAdminCustomers() {
             const list = document.getElementById('admin-c-list');
             list.innerHTML = db.customers.map(c => `
-                <div class="bg-white p-3 rounded-xl shadow-sm flex justify-between items-center">
+                <div class="bg-white p-3 rounded-lg shadow-sm flex justify-between items-center border" onclick="openCustomerForm('${c.id}')">
                     <div>
                         <div class="font-bold text-sm">${c.name}</div>
-                        <div class="text-[10px] px-2 py-0.5 rounded bg-gray-100 inline-block">${c.group}</div>
+                        <div class="text-[10px] text-gray-400">${c.group} | ${c.phone}</div>
                     </div>
-                    <button onclick="openCustomerForm('${c.id}')" class="text-gray-400"><i class="fa fa-edit"></i></button>
-                </div>
-            `).join('');
+                    <i class="fa fa-angle-right text-gray-300"></i>
+                </div>`).join('');
         }
 
         function openProductForm(id = '') {
             const p = db.products.find(x => x.id === id) || {id:'', cat:'', name:'', unit:'', desc:'', cost:0, si:0, le:0, img:''};
-            document.getElementById('form-title').innerText = id ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm mới";
+            document.getElementById('form-title').innerText = id ? "Sửa sản phẩm" : "Thêm sản phẩm";
             document.getElementById('form-fields').innerHTML = `
+                <input id="f-id" placeholder="Mã hàng" class="w-full p-3 bg-gray-50 border rounded-lg" value="${p.id}">
+                <input id="f-name" placeholder="Tên sản phẩm" class="w-full p-3 bg-gray-50 border rounded-lg" value="${p.name}">
                 <div class="grid grid-cols-2 gap-2">
-                    <input id="f-id" placeholder="Mã hàng" class="p-3 border rounded-xl" value="${p.id}" ${id?'readonly bg-gray-50':''}>
-                    <input id="f-cat" placeholder="Nhóm" class="p-3 border rounded-xl" value="${p.cat}">
+                    <input id="f-cost" type="number" placeholder="Giá nhập" class="p-3 bg-gray-50 border rounded-lg" value="${p.cost}">
+                    <input id="f-si" type="number" placeholder="Giá sỉ" class="p-3 bg-gray-50 border rounded-lg" value="${p.si}">
                 </div>
-                <input id="f-name" placeholder="Tên sản phẩm" class="w-full p-3 border rounded-xl" value="${p.name}">
-                <div class="grid grid-cols-3 gap-2">
-                    <input id="f-cost" type="number" placeholder="Nhập" class="p-3 border rounded-xl text-xs" value="${p.cost}">
-                    <input id="f-si" type="number" placeholder="Giá sỉ" class="p-3 border rounded-xl text-xs" value="${p.si}">
-                    <input id="f-le" type="number" placeholder="Giá lẻ" class="p-3 border rounded-xl text-xs" value="${p.le}">
-                </div>
-                <input id="f-img" placeholder="Link hình ảnh" class="w-full p-3 border rounded-xl" value="${p.img}">
+                <input id="f-le" type="number" placeholder="Giá lẻ" class="w-full p-3 bg-gray-50 border rounded-lg font-bold text-blue-600" value="${p.le}">
+                <input id="f-img" placeholder="Link ảnh (JPG/PNG)" class="w-full p-3 bg-gray-50 border rounded-lg" value="${p.img}">
             `;
             document.getElementById('btnSave').onclick = () => upsert('upsertProduct');
             openModal('modal-form');
@@ -278,15 +300,15 @@
 
         function openCustomerForm(id = '') {
             const c = db.customers.find(x => x.id === id) || {id:'', name:'', group:'Khách Lẻ', phone:''};
-            document.getElementById('form-title').innerText = id ? "Sửa khách hàng" : "Thêm khách hàng mới";
+            document.getElementById('form-title').innerText = id ? "Sửa khách hàng" : "Thêm khách hàng";
             document.getElementById('form-fields').innerHTML = `
-                <input id="f-id" placeholder="Mã khách" class="w-full p-3 border rounded-xl" value="${c.id}" ${id?'readonly bg-gray-50':''}>
-                <input id="f-name" placeholder="Tên khách" class="w-full p-3 border rounded-xl" value="${c.name}">
-                <select id="f-group" class="w-full p-3 border rounded-xl">
+                <input id="f-id" placeholder="Mã khách" class="w-full p-3 bg-gray-50 border rounded-lg" value="${c.id}">
+                <input id="f-name" placeholder="Tên khách hàng" class="w-full p-3 bg-gray-50 border rounded-lg" value="${c.name}">
+                <select id="f-group" class="w-full p-3 bg-gray-50 border rounded-lg">
                     <option ${c.group=='Khách Lẻ'?'selected':''}>Khách Lẻ</option>
                     <option ${c.group=='Khách Sỉ'?'selected':''}>Khách Sỉ</option>
                 </select>
-                <input id="f-phone" placeholder="Số điện thoại" class="w-full p-3 border rounded-xl" value="${c.phone}">
+                <input id="f-phone" placeholder="Số điện thoại" class="w-full p-3 bg-gray-50 border rounded-lg" value="${c.phone}">
             `;
             document.getElementById('btnSave').onclick = () => upsert('upsertCustomer');
             openModal('modal-form');
@@ -295,15 +317,15 @@
         async function upsert(action) {
             const item = {};
             document.querySelectorAll('#form-fields [id^="f-"]').forEach(el => { item[el.id.replace('f-', '')] = el.value; });
-            document.getElementById('btnSave').innerText = "Đang lưu...";
+            document.getElementById('btnSave').innerText = "Đang xử lý...";
             await fetch(API_URL, { method: "POST", body: JSON.stringify({action, item}) });
             location.reload();
         }
 
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); if(id=='modal-select-p') renderPOSProducts(); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-        loadData();
+        init();
     </script>
 </body>
 </html>
